@@ -4,41 +4,44 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.*;
+
+import static edu.wpi.first.units.Units.*;
 
 public class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
-    /* Setting up bindings for necessary control of the swerve drive platform */
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    /* Subsystems */
+    private final Elevator m_elevator = new Elevator();
+    private final Funnel m_funnel = new Funnel();
+    private final Manipulator m_manipulator = new Manipulator();
+    private final Climber m_climber = new Climber();
+    private final Transfer m_transfer = new Transfer();
+    private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    /* Setting upCommand bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-
-    private final Telemetry logger = new Telemetry(MaxSpeed);
-
-    private final CommandXboxController joystick = new CommandXboxController(0);
-
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    public Elevator m_elevator = new Elevator();
 
     public RobotContainer() {
+        SignalLogger.enableAutoLogging(true);
         configureBindings();
+
+
     }
 
     private void configureBindings() {
@@ -68,11 +71,17 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        
-
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.povUp().whileTrue(m_elevator.up());
-        joystick.povDown().whileTrue(m_elevator.down());
+
+        // ELEVATOR
+        joystick.povUp().whileTrue(m_elevator.upCommand());
+        joystick.povDown().whileTrue(m_elevator.downCommand());
+
+        // FUNNEL
+
+        // Move the coral until it is fully in the indexer
+        new Trigger(m_funnel::isDetected)
+            .whileTrue(m_funnel.intake().alongWith(m_transfer.transfer()));
 
     }
 
