@@ -25,6 +25,8 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonCamera;
+
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -33,6 +35,8 @@ import static edu.wpi.first.units.Units.Volts;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+    private PhotonCamera m_camera = new PhotonCamera("photonvision");
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -125,7 +129,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureAutoBuilder();
+        configurePathPlanner();
     }
 
     /**
@@ -150,7 +154,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureAutoBuilder();
+        configurePathPlanner();
 
     }
 
@@ -184,10 +188,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        configureAutoBuilder();
+        configurePathPlanner();
     }
 
-    private void configureAutoBuilder() {
+    private void configurePathPlanner() {
         try {
             var config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(

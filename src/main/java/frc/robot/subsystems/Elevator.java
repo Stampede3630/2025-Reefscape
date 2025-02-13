@@ -31,10 +31,10 @@ public class Elevator extends SubsystemBase {
   /** Creates a new Elevator. */
   private final TalonFX m_leader = new TalonFX(Constants.kElevatorLeaderId, Constants.kSwerveCanBus);
   private final TalonFX m_follower = new TalonFX(Constants.kElevatorFollowerId, Constants.kSwerveCanBus);
-  private final CANcoder m_encoder = new CANcoder(Constants.kElevatorEncoderId, Constants.kSwerveCanBus);
+  // private final CANcoder m_encoder = new CANcoder(Constants.kElevatorEncoderId, Constants.kSwerveCanBus);
   private final PositionTorqueCurrentFOC m_positionRequest = new PositionTorqueCurrentFOC(0).withSlot(0);
   private final TorqueCurrentFOC m_tcRequest = new TorqueCurrentFOC(0);
-  private final StatusSignal<Angle> m_position =  m_encoder.getPosition();
+  // private final StatusSignal<Angle> m_position =  m_encoder.getPosition();
 
   // TODO probably only need to sysid one of the elevator motors.
   private final SysIdRoutine m_sysidRoutine = new SysIdRoutine(
@@ -42,7 +42,7 @@ public class Elevator extends SubsystemBase {
           /* This is in Amps/s, but SysId only supports "volts per second" */
           Volts.of(3).per(Second),
           /* This is in Amps, but SysId only supports "volts" */
-          Volts.of(10), // TODO TBD
+          Volts.of(20), // TODO TBD
           null, // Use default timeout (10 s)
           // Log state with SignalLogger class
           state -> SignalLogger.writeString("SysIdElevator_State", state.toString())
@@ -50,6 +50,7 @@ public class Elevator extends SubsystemBase {
       output -> {
         /* output is actually amps, but SysId only supports "volts" */
         m_leader.setControl(m_tcRequest.withOutput(output.in(Volts)));
+        
         /* also log the requested output for SysId */
         SignalLogger.writeDouble("Leader_Amps", output.in(Volts));
       },null, this
@@ -57,40 +58,36 @@ public class Elevator extends SubsystemBase {
   );
 
   public Elevator() {
-    m_encoder.getConfigurator().apply(new CANcoderConfiguration()
-        .withMagnetSensor(new MagnetSensorConfigs()
-            .withSensorDirection(SensorDirectionValue.Clockwise_Positive) // TODO double check
-        )
-    );
-    m_position.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
+    // m_encoder.getConfigurator().apply(new CANcoderConfiguration()
+    //     .withMagnetSensor(new MagnetSensorConfigs()
+    //         .withSensorDirection(SensorDirectionValue.Clockwise_Positive) // TODO double check
+    //     )
+    // );
+    // m_position.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
 
-    m_leader.getConfigurator().apply(new TalonFXConfiguration()
-      .withMotorOutput(new MotorOutputConfigs()
-          .withInverted(InvertedValue.CounterClockwise_Positive)
-          .withNeutralMode(NeutralModeValue.Brake)
-      ).withSlot0(new Slot0Configs() // TODO Tune constants for elevator
-            .withKS(0)
-            .withKP(0)
-            .withKG(0)
-      ).withFeedback(new FeedbackConfigs()
-            .withFusedCANcoder(m_encoder)
-            .withRotorToSensorRatio(36.0/30) // TODO double check
-            .withSensorToMechanismRatio(1) // TODO find inches conversion rate (or maybe it's not linear?)
-            .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-      ).withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
-            .withForwardSoftLimitEnable(true)
-            .withForwardSoftLimitThreshold(60) // 60 inches to be safe for now
-            .withReverseSoftLimitEnable(true)
-            .withReverseSoftLimitThreshold(1)
-      )
+    TalonFXConfiguration config = new TalonFXConfiguration()
+    .withMotorOutput(new MotorOutputConfigs()
+        .withInverted(InvertedValue.CounterClockwise_Positive)
+        .withNeutralMode(NeutralModeValue.Brake)
+    )
+    // .withSlot0(new Slot0Configs() // TODO Tune constants for elevator
+    //       .withKS(0)
+    //       .withKP(0)
+    //       .withKG(0)
+    // )
+    .withFeedback(new FeedbackConfigs()
+          .withSensorToMechanismRatio(1) // TODO find inches conversion rate (or maybe it's not linear?)
+          .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+    )
+    .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+          .withForwardSoftLimitEnable(false)
+          .withForwardSoftLimitThreshold(60) // 60 inches to be safe for now
+          .withReverseSoftLimitEnable(false)
+          .withReverseSoftLimitThreshold(1)
     );
-
-    m_follower.getConfigurator().apply(new TalonFXConfiguration()
-      .withMotorOutput(new MotorOutputConfigs()
-          .withInverted(InvertedValue.CounterClockwise_Positive)
-          .withNeutralMode(NeutralModeValue.Brake)
-      )
-    );
+    
+    m_leader.getConfigurator().apply(config);
+    m_follower.getConfigurator().apply(config);
 
     m_follower.setControl(new Follower(Constants.kElevatorLeaderId, false));
   }
@@ -115,9 +112,9 @@ public class Elevator extends SubsystemBase {
     return m_sysidRoutine.dynamic(direction);
   }
 
-  public void seedPosition(double position) {
-    m_encoder.setPosition(position);
-  }
+  // public void seedPosition(double position) {
+  //   m_encoder.setPosition(position);
+  // }
 
   public Command positionCommand(DoubleSupplier _position) {
     return runOnce(() -> {
