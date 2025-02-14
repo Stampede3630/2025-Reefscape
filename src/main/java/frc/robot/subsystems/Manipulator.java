@@ -27,7 +27,7 @@ import frc.robot.Constants;
 
 public class Manipulator extends SubsystemBase {
   private final TalonFX m_motor = new TalonFX(Constants.kManipulatorMotorId, Constants.kManipulatorCanBus);
-  private final VelocityTorqueCurrentFOC m_velocityRequest = new VelocityTorqueCurrentFOC(0);
+  private final VelocityTorqueCurrentFOC m_velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
 
     private final TorqueCurrentFOC m_tcRequest = new TorqueCurrentFOC(0);
 
@@ -77,10 +77,10 @@ public class Manipulator extends SubsystemBase {
             .withInverted(InvertedValue.Clockwise_Positive) // Verified 2/11 CL
             .withNeutralMode(NeutralModeValue.Brake)
         ).withSlot0(new Slot0Configs()
-          .withKS(21.819)
-          .withKV(0.087311)
-          .withKA(0.1)
-          .withKP(0.24834)
+          .withKS(3)
+          .withKV(1)
+          .withKA(1)
+          .withKP(0.5)
         )
     );
   }
