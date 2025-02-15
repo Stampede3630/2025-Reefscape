@@ -73,14 +73,17 @@ public class TunerConstants {
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
     // TODO: Verify this
-    private static final Pigeon2Configuration pigeonConfigs = new Pigeon2Configuration()
-        .withMountPose(new MountPoseConfigs()
-            .withMountPosePitch(90));
+    private static final Pigeon2Configuration pigeonConfigs = null;
+    // private static final Pigeon2Configuration pigeonConfigs = new Pigeon2Configuration()
+    //     .withMountPose(new MountPoseConfigs()
+    //         .withMountPoseYaw(90)
+    //         .withMountPosePitch(90)
+    //     );
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    private static final double kCoupleRatio = 3.5714285714285716;
+    private static final double kCoupleRatio = 3.5714285714285716; // TODO Fix this
 
-    private static final double kDriveGearRatio = 8.142857142857142;
+    private static final double kDriveGearRatio = 8.142857142857142; // TODO Fix this
     private static final double kSteerGearRatio = 21.428571428571427;
     private static final Distance kWheelRadius = Inches.of(2);
 

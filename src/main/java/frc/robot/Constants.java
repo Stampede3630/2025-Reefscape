@@ -11,9 +11,9 @@ public class Constants {
 
     public static final int kFunnelMotorId = 0;
     public static final int kClimberMotorId = 0;
-    
-    public static final int kElevatorLeaderId = 18;
-    public static final int kElevatorFollowerId = 17;
+
+    public static final int kElevatorLeaderId = 17;
+    public static final int kElevatorFollowerId = 18;
     public static final int kManipulatorMotorId = 1;
     public static final int kCanRangeId = 0;
 

@@ -77,10 +77,11 @@ public class Manipulator extends SubsystemBase {
             .withInverted(InvertedValue.Clockwise_Positive) // Verified 2/11 CL
             .withNeutralMode(NeutralModeValue.Brake)
         ).withSlot0(new Slot0Configs()
-          .withKS(3)
-          .withKV(1)
-          .withKA(1)
-          .withKP(0.5)
+          .withKS(70)
+          .withKV(0)
+          .withKA(0)
+          .withKP(10)
+          .withKI(10)
         )
     );
   }
