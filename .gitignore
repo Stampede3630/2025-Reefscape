@@ -38,6 +38,7 @@
 ### Java ###
 # Compiled class file
 *.class
+BuildConstants.java
 
 # Log file
 *.log

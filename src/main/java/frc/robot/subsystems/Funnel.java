@@ -1,6 +1,9 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2025 FRC 3630
+// https://github.com/Stampede3630
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
 
 package frc.robot.subsystems;
 
@@ -23,18 +26,21 @@ public class Funnel extends SubsystemBase {
   private final VelocityTorqueCurrentFOC m_funnelRequest = new VelocityTorqueCurrentFOC(0);
 
   public Funnel() {
-    m_funnel.getConfigurator().apply(new TalonFXConfiguration()
-        .withMotorOutput(new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive) // TODO TBD
-            .withNeutralMode(NeutralModeValue.Brake)
-        ).withSlot0(new Slot0Configs()
-            .withKS(0) // TODO Tune
-            .withKP(0)
-        ).withFeedback(new FeedbackConfigs()
-            .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
-        )
-    );
-
+    m_funnel
+        .getConfigurator()
+        .apply(
+            new TalonFXConfiguration()
+                .withMotorOutput(
+                    new MotorOutputConfigs()
+                        .withInverted(InvertedValue.CounterClockwise_Positive) // TODO TBD
+                        .withNeutralMode(NeutralModeValue.Brake))
+                .withSlot0(
+                    new Slot0Configs()
+                        .withKS(0) // TODO Tune
+                        .withKP(0))
+                .withFeedback(
+                    new FeedbackConfigs()
+                        .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)));
 
     m_canRange.getConfigurator().apply(new CANrangeConfiguration());
     m_isCoralDetected.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
@@ -45,9 +51,10 @@ public class Funnel extends SubsystemBase {
   }
 
   public Command intake() {
-    return startEnd(() -> m_funnel.setControl(m_funnelRequest.withVelocity(1)),() -> m_funnel.setControl(m_funnelRequest.withVelocity(0)));
+    return startEnd(
+        () -> m_funnel.setControl(m_funnelRequest.withVelocity(1)),
+        () -> m_funnel.setControl(m_funnelRequest.withVelocity(0)));
   }
-
 
   @Override
   public void periodic() {
