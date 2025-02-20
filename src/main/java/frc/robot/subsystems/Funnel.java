@@ -15,14 +15,16 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Funnel extends SubsystemBase {
   private final TalonFX m_funnel = new TalonFX(Constants.kFunnelMotorId, Constants.kSwerveCanBus);
-  private final CANrange m_canRange = new CANrange(Constants.kCanRangeId, Constants.kSwerveCanBus);
-  private final StatusSignal<Boolean> m_isCoralDetected = m_canRange.getIsDetected();
+  private final CANrange m_canRange = new CANrange(Constants.kCanRangeId, Constants.kManipulatorCanBus);
+  private final StatusSignal<Distance> m_canRangeDistance = m_canRange.getDistance();
   private final VelocityTorqueCurrentFOC m_funnelRequest = new VelocityTorqueCurrentFOC(0);
 
   public Funnel() {
@@ -43,11 +45,11 @@ public class Funnel extends SubsystemBase {
                         .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)));
 
     m_canRange.getConfigurator().apply(new CANrangeConfiguration());
-    m_isCoralDetected.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
+    m_canRangeDistance.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
   }
 
   public boolean isDetected() {
-    return m_isCoralDetected.getValue();
+    return m_canRangeDistance.refresh().getValueAsDouble()<0.10;
   }
 
   public Command intake() {

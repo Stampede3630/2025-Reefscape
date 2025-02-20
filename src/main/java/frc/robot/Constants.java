@@ -22,7 +22,7 @@ public class Constants {
   public static final int kElevatorLeaderId = 17;
   public static final int kElevatorFollowerId = 18;
   public static final int kManipulatorMotorId = 1;
-  public static final int kCanRangeId = 0;
+  public static final int kCanRangeId = 19;
 
   public static final Frequency kNonSwerveUpdateRate = Hertz.of(250);
 }
