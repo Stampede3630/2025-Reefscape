@@ -22,8 +22,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import frc.robot.util.HasTalonFX;
+import java.util.List;
 
-public class ElevatorIOTalonFX implements ElevatorIO {
+public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
   private final TalonFX leader;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
@@ -106,6 +108,15 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         Constants.kUnimportantUpdateRate, leaderTemp, followerTemp);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        Constants.kSomewhatImportantUpdateRate,
+        position,
+        velocity,
+        reference,
+        leaderTorqueCurrent,
+        leaderStatorCurrent,
+        leaderSupplyCurrent);
+
     ParentDevice.optimizeBusUtilizationForAll(leader);
 
     follower.setControl(new Follower(Constants.kElevatorLeaderId, false));
@@ -175,5 +186,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   @Override
   public boolean seedPosition(double newPosition) {
     return leader.setPosition(newPosition).isOK();
+  }
+
+  @Override
+  public List<TalonFX> getTalonFXs() {
+    return List.of(leader, follower);
   }
 }

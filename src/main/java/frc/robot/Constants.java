@@ -29,6 +29,8 @@ public class Constants {
 
   public static final AudioConfigs kAudioConfigs =
       new AudioConfigs().withBeepOnConfig(true).withBeepOnBoot(true).withAllowMusicDurDisable(true);
+  public static double kSomewhatImportantUpdateRate = 100;
+  public static double kImportantUpdateRate = 250;
 
   public enum Mode {
     /** Running on a real robot. */

@@ -7,6 +7,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -29,10 +31,9 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
-
+import frc.robot.util.HasTalonFX;
+import java.util.List;
 import java.util.Queue;
-
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
@@ -40,7 +41,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
  *
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
-public class ModuleIOTalonFX implements ModuleIO {
+public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
   private final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       constants;
@@ -210,13 +211,9 @@ public class ModuleIOTalonFX implements ModuleIO {
     inputs.odometryTimestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryDrivePositionsRad =
-        drivePositionQueue.stream()
-            .mapToDouble(Units::rotationsToRadians)
-            .toArray();
+        drivePositionQueue.stream().mapToDouble(Units::rotationsToRadians).toArray();
     inputs.odometryTurnPositions =
-        turnPositionQueue.stream()
-            .map(Rotation2d::fromRotations)
-            .toArray(Rotation2d[]::new);
+        turnPositionQueue.stream().map(Rotation2d::fromRotations).toArray(Rotation2d[]::new);
     timestampQueue.clear();
     drivePositionQueue.clear();
     turnPositionQueue.clear();
@@ -258,5 +255,10 @@ public class ModuleIOTalonFX implements ModuleIO {
           case TorqueCurrentFOC ->
               positionTorqueCurrentRequest.withPosition(rotation.getRotations());
         });
+  }
+
+  @Override
+  public List<TalonFX> getTalonFXs() {
+    return List.of(driveTalon, turnTalon);
   }
 }
