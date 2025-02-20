@@ -45,7 +45,7 @@ public class Funnel extends SubsystemBase {
                         .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)));
 
     m_canRange.getConfigurator().apply(new CANrangeConfiguration());
-    m_canRangeDistance.setUpdateFrequency(Constants.kNonSwerveUpdateRate);
+    m_canRangeDistance.setUpdateFrequency(Constants.kUnimportantUpdateRate);
   }
 
   public boolean isDetected() {

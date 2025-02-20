@@ -7,18 +7,11 @@
 
 package frc.robot.subsystems.drive;
 
-import static frc.robot.util.PhoenixUtil.*;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -34,8 +27,12 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
+
 import java.util.Queue;
+
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
@@ -98,6 +95,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
     // Configure drive motor
     var driveConfig = constants.DriveMotorInitialConfigs;
+    driveConfig.Audio = Constants.kAudioConfigs;
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.Slot0 = constants.DriveMotorGains;
     driveConfig.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
@@ -114,6 +112,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
     // Configure turn motor
     var turnConfig = new TalonFXConfiguration();
+    turnConfig.Audio = Constants.kAudioConfigs;
     turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     turnConfig.Slot0 = constants.SteerMotorGains;
     turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
@@ -212,11 +211,11 @@ public class ModuleIOTalonFX implements ModuleIO {
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryDrivePositionsRad =
         drivePositionQueue.stream()
-            .mapToDouble((Double value) -> Units.rotationsToRadians(value))
+            .mapToDouble(Units::rotationsToRadians)
             .toArray();
     inputs.odometryTurnPositions =
         turnPositionQueue.stream()
-            .map((Double value) -> Rotation2d.fromRotations(value))
+            .map(Rotation2d::fromRotations)
             .toArray(Rotation2d[]::new);
     timestampQueue.clear();
     drivePositionQueue.clear();

@@ -19,15 +19,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Funnel;
 import frc.robot.subsystems.Manipulator;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
+import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -46,7 +43,7 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
-  private final Elevator m_elevator = new Elevator();
+  private final Elevator elevator;
   private final Funnel m_funnel = new Funnel();
   private final Manipulator m_manipulator = new Manipulator();
   private final Climber m_climber = new Climber();
@@ -64,6 +61,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
+        elevator = new Elevator(new ElevatorIOTalonFX());
         break;
 
       case SIM:
@@ -75,6 +73,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
+        elevator = new Elevator(new ElevatorIO() {});
         break;
 
       default:
@@ -86,6 +85,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        elevator = new Elevator(new ElevatorIO() {});
         break;
     }
 
@@ -128,16 +128,15 @@ public class RobotContainer {
             () -> -controller.getRightX()));
 
     // ELEVATOR
-    controller.a().onTrue(m_elevator.positionCommand(() -> selectedPosition));
-    controller.povUp().whileTrue(m_elevator.upCommand());
-    controller.povDown().whileTrue(m_elevator.downCommand());
+    controller.a().onTrue(elevator.setPosition(() -> selectedPosition));
+    controller.povUp().whileTrue(elevator.upCommand());
+    controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
     controller.rightTrigger().whileTrue(m_manipulator.velocityCommand(() -> 5));
     controller
         .leftTrigger()
-        .whileTrue(
-            m_elevator.positionCommand(() -> 0.1).andThen(m_manipulator.velocityCommand(() -> 7)));
+        .whileTrue(elevator.setPosition(() -> 0.1).andThen(m_manipulator.velocityCommand(() -> 7)));
 
     controller.start().whileTrue(m_manipulator.velocityCommand(() -> -12));
 
