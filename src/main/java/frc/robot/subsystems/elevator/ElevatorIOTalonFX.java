@@ -47,7 +47,7 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
   private final Debouncer leaderConnectedDebouncer = new Debouncer(0.5);
   private final Debouncer followerConnectedDebouncer = new Debouncer(0.5);
 
-  private final double positionSetpoint = 0;
+  private double positionSetpoint = 0;
   private final MotionMagicExpoVoltage positionRequest =
       new MotionMagicExpoVoltage(positionSetpoint).withSlot(0).withEnableFOC(true);
   private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
@@ -123,7 +123,8 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
   }
 
   @Override
-  public void runPosition(double positionRad) {
+  public void runPosition(double position) {
+    positionSetpoint = position;
     leader.setControl(positionRequest.withPosition(positionSetpoint));
   }
 
