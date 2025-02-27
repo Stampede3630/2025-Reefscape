@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left2CagePosition to I"
+            "pathName": "CagePosition3 to I"
           }
         },
         {
@@ -56,6 +56,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "P3 auto1 left side",
   "choreoAuto": false
 }

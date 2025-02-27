@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "scoreCoral"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "H to Left"
@@ -37,7 +43,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ScoreCoral"
+            "name": "scoreCoral"
           }
         }
       ]
