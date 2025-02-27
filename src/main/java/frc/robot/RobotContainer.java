@@ -32,6 +32,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -51,7 +52,7 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final Elevator elevator;
   private final Manipulator manipulator;
-  private double selectedPosition = 1;
+  private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -146,7 +147,7 @@ public class RobotContainer {
             () -> -controller.getRightX()));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(() -> selectedPosition));
+    controller.a().onTrue(elevator.setPosition(() -> selectedPosition.get()));
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 
@@ -159,13 +160,13 @@ public class RobotContainer {
     controller.start().whileTrue(manipulator.runVelocity(() -> -5));
 
     // L1
-    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition = 10));
+    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition.set(10)));
     // L2
-    buttonBoard.axisLessThan(1, -.9).onTrue(Commands.runOnce(() -> selectedPosition = 20));
+    buttonBoard.axisLessThan(1, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(20)));
     // L3
-    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition = 30));
+    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(30)));
     // L4
-    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition = 56));
+    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition.set(56)));
 
     //    // Lock to 0° when A button is held
     //    controller
