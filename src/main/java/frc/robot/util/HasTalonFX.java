@@ -7,6 +7,9 @@
 
 package frc.robot.util;
 
-public class FieldConstants {
-  public static enum ReefPositions {}
+import com.ctre.phoenix6.hardware.TalonFX;
+import java.util.List;
+
+public interface HasTalonFX {
+  List<TalonFX> getTalonFXs();
 }

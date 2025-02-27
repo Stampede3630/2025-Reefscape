@@ -1,99 +1,204 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2025 FRC 3630
+// https://github.com/Stampede3630
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
 
 package frc.robot;
 
-import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
+import static frc.robot.subsystems.vision.VisionConstants.*;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.*;
+import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
+import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
+import frc.robot.subsystems.manipulator.Manipulator;
+import frc.robot.subsystems.manipulator.ManipulatorIO;
+import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-import static edu.wpi.first.units.Units.*;
-
+/**
+ * This class is where the bulk of the robot should be declared. Since Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * subsystems, commands, and button mappings) should be declared here.
+ */
 public class RobotContainer {
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-    private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CommandXboxController buttonBoard = new CommandXboxController(1);
+  // Subsystems
+  private final Drive drive;
+  private final Vision vision;
+  // Controller
+  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController buttonBoard = new CommandXboxController(1);
 
-    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    /* Subsystems */
-    private final Elevator m_elevator = new Elevator();
-    private final Funnel m_funnel = new Funnel();
-    private final Manipulator m_manipulator = new Manipulator();
-    private final Climber m_climber = new Climber();
-    private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private final Telemetry logger = new Telemetry(MaxSpeed);
-    private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-    /* Setting upCommand bindings for necessary control of the swerve drive platform */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+  // Dashboard inputs
+  private final LoggedDashboardChooser<Command> autoChooser;
+  private final Elevator elevator;
+  private final Manipulator manipulator;
+  private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 0);
 
-    private final SendableChooser<Command> autoChooser = AutoBuilder.buildAutoChooser();
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public RobotContainer() {
+    switch (Constants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOLimelight(camera0Name, drive::getRotation),
+                new VisionIOLimelight(camera1Name, drive::getRotation));
+        elevator = new Elevator(new ElevatorIOTalonFX());
+        manipulator = new Manipulator(new ManipulatorIOTalonFX());
+        break;
 
-    public RobotContainer() {
-        SignalLogger.enableAutoLogging(true);
-        configureBindings();
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+        elevator = new Elevator(new ElevatorIO() {});
+        manipulator = new Manipulator(new ManipulatorIO() {});
+        break;
 
-        SmartDashboard.putData("Auto Chooser", autoChooser);
-
+      default:
+        // Replayed robot, disable IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {});
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        elevator = new Elevator(new ElevatorIO() {});
+        manipulator = new Manipulator(new ManipulatorIO() {});
+        break;
     }
 
-    private void configureBindings() {
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
-        );
+    // Set up auto routines
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        ));
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        // Note that each routine should be run exactly once in a single log.
-        joystick.y().whileTrue(m_manipulator.sysIdDynamic(Direction.kForward));
-        joystick.x().whileTrue(m_manipulator.sysIdDynamic(Direction.kReverse));
-        joystick.a().whileTrue(m_manipulator.sysIdQuasistatic(Direction.kForward));
-        joystick.b().whileTrue(m_manipulator.sysIdQuasistatic(Direction.kReverse));
+    // Configure the button bindings
+    configureButtonBindings();
+  }
 
-        joystick.leftBumper().onTrue(Commands.runOnce(SignalLogger::start).andThen(Commands.print("Started Log")));
-        joystick.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop).andThen(Commands.print("Stopped Log")));
+  /**
+   * Use this method to define your button->command mappings. Buttons can be created by
+   * instantiating a {@link GenericHID} or one of its subclasses ({@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+   */
+  private void configureButtonBindings() {
+    // Default command, normal field-relative drive
+    drive.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            drive,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX()));
 
-        // // reset the field-centric heading on left bumper press
-        // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    // ELEVATOR
+    controller.a().onTrue(elevator.setPosition(() -> selectedPosition.get()));
+    controller.povUp().whileTrue(elevator.upCommand());
+    controller.povDown().whileTrue(elevator.downCommand());
 
-        drivetrain.registerTelemetry(logger::telemeterize);
+    // MANIPULATOR
+    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> 5));
+    controller
+        .leftTrigger()
+        .whileTrue(elevator.setPosition(() -> 0.1).andThen(manipulator.runVelocity(() -> 7)));
 
-        // ELEVATOR
-        joystick.povUp().whileTrue(m_elevator.upCommand());
-        joystick.povDown().whileTrue(m_elevator.downCommand());
+    controller.start().whileTrue(manipulator.runVelocity(() -> -5));
 
-        // MANIPULATOR
-        joystick.rightTrigger().whileTrue(m_manipulator.velocityCommand(() -> 12));
-        joystick.leftTrigger().whileTrue(m_manipulator.dutyCycleCommand(joystick::getLeftTriggerAxis));
+    // L1
+    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition.set(10)));
+    // L2
+    buttonBoard.axisLessThan(1, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(20)));
+    // L3
+    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(30)));
+    // L4
+    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition.set(56)));
 
-    }
+    //    // Lock to 0° when A button is held
+    //    controller
+    //            .a()
+    //            .whileTrue(
+    //                    DriveCommands.joystickDriveAtAngle(
+    //                            drive,
+    //                            () -> -controller.getLeftY(),
+    //                            () -> -controller.getLeftX(),
+    //                            () -> new Rotation2d()));
 
-    public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
-    }
+    // Switch to X pattern when X button is pressed
+    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+    // Reset gyro to 0° when B button is pressed
+    controller
+        .leftBumper()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
+  }
+
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
 }
