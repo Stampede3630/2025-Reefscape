@@ -31,6 +31,7 @@ public class Constants {
       new AudioConfigs().withBeepOnConfig(true).withBeepOnBoot(true).withAllowMusicDurDisable(true);
   public static double kSomewhatImportantUpdateRate = 100;
   public static double kImportantUpdateRate = 250;
+  public static final double loopPeriodSecs = 0.02;
 
   public enum Mode {
     /** Running on a real robot. */
@@ -41,5 +42,12 @@ public class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static final boolean tuningMode = false;
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
   }
 }

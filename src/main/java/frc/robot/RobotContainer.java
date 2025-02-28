@@ -52,7 +52,11 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final Elevator elevator;
   private final Manipulator manipulator;
-  private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 0);
+  private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 1);
+  private LoggedNetworkNumber outtakeSpeed =
+      new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
+  private LoggedNetworkNumber intakeSpeed =
+      new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -152,21 +156,24 @@ public class RobotContainer {
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
-    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> 5));
+    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> outtakeSpeed.get()));
     controller
         .leftTrigger()
-        .whileTrue(elevator.setPosition(() -> 0.1).andThen(manipulator.runVelocity(() -> 7)));
+        .whileTrue(
+            elevator
+                .setPosition(() -> 1)
+                .andThen(manipulator.runVelocity(() -> intakeSpeed.get())));
 
-    controller.start().whileTrue(manipulator.runVelocity(() -> -5));
+    controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
-    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition.set(10)));
+    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition.set(18)));
     // L2
     buttonBoard.axisLessThan(1, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(20)));
     // L3
-    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(30)));
+    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(36)));
     // L4
-    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition.set(56)));
+    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition.set(60)));
 
     //    // Lock to 0° when A button is held
     //    controller
