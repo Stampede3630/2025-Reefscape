@@ -1,0 +1,61 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CagePosition2 to I"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "I to LSource"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LSource to K"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "K to LSource"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LSource to L"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoral"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "P3 auto1 left side",
+  "choreoAuto": false
+}
