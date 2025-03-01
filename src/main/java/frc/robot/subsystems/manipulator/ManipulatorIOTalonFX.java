@@ -79,7 +79,14 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
   public void updateInputs(ManipulatorIOInputs inputs) {
     boolean connected =
         BaseStatusSignal.refreshAll(
-                position, velocity, torqueCurrent, statorCurrent, supplyCurrent, voltage, temp)
+                position,
+                velocity,
+                torqueCurrent,
+                statorCurrent,
+                supplyCurrent,
+                voltage,
+                temp,
+                tofDistance)
             .isOK();
     inputs.connected = connectedDebouncer.calculate(connected);
     inputs.position = position.getValueAsDouble();

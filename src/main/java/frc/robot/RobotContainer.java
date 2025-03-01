@@ -140,6 +140,19 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    autoChooser.addOption(
+        "Drive SysId SPINNY(Quasistatic Forward)",
+        drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId SPINNY(Quasistatic Reverse)",
+        drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId SPINNY(Dynamic Forward)",
+        drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId SPINNY(Dynamic Reverse)",
+        drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kReverse));
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -168,10 +181,7 @@ public class RobotContainer {
     controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> outtakeSpeed.get()));
     controller
         .leftTrigger()
-        .whileTrue(
-            elevator
-                .setPosition(() -> 1)
-                .andThen(manipulator.runVelocity(() -> intakeSpeed.get())));
+        .whileTrue(elevator.setPosition(() -> 1).andThen(manipulator.autoIntake()));
 
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 

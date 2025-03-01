@@ -33,6 +33,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -63,8 +64,8 @@ public class Drive extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 74.088;
-  private static final double ROBOT_MOI = 6.883;
+  private static final double ROBOT_MASS_KG = Units.lbsToKilograms(96.4 + 35);
+  private static final double ROBOT_MOI = 26.4032;
   private static final double WHEEL_COF = 1.2;
   private static final RobotConfig PP_CONFIG =
       new RobotConfig(
@@ -85,6 +86,7 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
+  private final SysIdRoutine sysIdSpinny;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
@@ -150,6 +152,16 @@ public class Drive extends SubsystemBase {
                 (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+    // Configure SysId
+    sysIdSpinny =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                Volts.of(2).per(Second),
+                Volts.of(20),
+                Seconds.of(10),
+                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runSpinnyCharacterization(voltage.in(Volts)), null, this));
   }
 
   @Override
@@ -242,6 +254,14 @@ public class Drive extends SubsystemBase {
     }
   }
 
+  /** Runs the drive in a spinny cirlce with the specified drive output. */
+  public void runSpinnyCharacterization(double output) {
+    modules[0].runSpinnyCharacterization(output, false);
+    modules[1].runSpinnyCharacterization(output, true);
+    modules[2].runSpinnyCharacterization(-output, true);
+    modules[3].runSpinnyCharacterization(-output, false);
+  }
+
   /** Stops the drive. */
   public void stop() {
     runVelocity(new ChassisSpeeds());
@@ -270,6 +290,20 @@ public class Drive extends SubsystemBase {
   /** Returns a command to run a dynamic test in the specified direction. */
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
+  }
+
+  /** Returns a command to run a SPINNY quasistatic test in the specified direction. */
+  public Command sysIdSpinnyQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runSpinnyCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(sysIdSpinny.quasistatic(direction));
+  }
+
+  /** Returns a command to run a SPINNY dynamic test in the specified direction. */
+  public Command sysIdSpinnyDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runSpinnyCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(sysIdSpinny.dynamic(direction));
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

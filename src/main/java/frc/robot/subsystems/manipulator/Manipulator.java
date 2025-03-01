@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems.manipulator;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -50,5 +51,10 @@ public class Manipulator extends SubsystemBase {
 
   public Command runVelocity(DoubleSupplier velocity) {
     return startEnd(() -> io.runVelocity(velocity.getAsDouble()), io::stop);
+  }
+
+  public Command autoIntake() {
+    Debouncer debouncer = new Debouncer(0.1);
+    return runVelocity(() -> 10).until(() -> debouncer.calculate(inputs.tofDistance < 0.1));
   }
 }

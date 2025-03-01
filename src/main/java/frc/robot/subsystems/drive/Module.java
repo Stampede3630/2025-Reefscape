@@ -88,6 +88,12 @@ public class Module {
     io.setTurnPosition(new Rotation2d());
   }
 
+  /** Runs the module with the specified output while controlling to zero degrees. */
+  public void runSpinnyCharacterization(double output, boolean b) {
+    io.setDriveOpenLoop(output);
+    io.setTurnPosition(b ? new Rotation2d(Math.PI / 4.0) : new Rotation2d(3 * Math.PI / 4.0));
+  }
+
   /** Disables all outputs to motors. */
   public void stop() {
     io.setDriveOpenLoop(0.0);
