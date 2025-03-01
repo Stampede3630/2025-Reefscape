@@ -31,6 +31,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.EqualsUtil;
 import frc.robot.util.HasTalonFX;
 import java.util.List;
 import java.util.Queue;
@@ -247,7 +248,13 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
-          case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
+          case TorqueCurrentFOC -> {
+            if (EqualsUtil.epsilonEquals(velocityRadPerSec, 0)) {
+              yield torqueCurrentRequest.withOutput(0);
+            } else {
+              yield velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
+            }
+          }
         });
   }
 

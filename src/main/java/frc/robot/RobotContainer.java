@@ -20,6 +20,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOTalonFX;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
@@ -52,11 +55,14 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final Elevator elevator;
   private final Manipulator manipulator;
+  private final Climber climber;
   private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 1);
   private LoggedNetworkNumber outtakeSpeed =
       new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
   private LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
+  private LoggedNetworkNumber climberTorqueCurrent =
+      new LoggedNetworkNumber("Climber/torqueCurrent", 10);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -77,6 +83,7 @@ public class RobotContainer {
                 new VisionIOLimelight(camera1Name, drive::getRotation));
         elevator = new Elevator(new ElevatorIOTalonFX());
         manipulator = new Manipulator(new ManipulatorIOTalonFX());
+        climber = new Climber(new ClimberIOTalonFX());
         break;
 
       case SIM:
@@ -95,6 +102,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
         elevator = new Elevator(new ElevatorIO() {});
         manipulator = new Manipulator(new ManipulatorIO() {});
+        climber = new Climber(new ClimberIO() {});
         break;
 
       default:
@@ -109,6 +117,7 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         manipulator = new Manipulator(new ManipulatorIO() {});
+        climber = new Climber(new ClimberIO() {});
         break;
     }
 
@@ -198,6 +207,8 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
+    controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
+    controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
   }
 
   /**

@@ -20,7 +20,7 @@ public class Constants {
   public static final CANBus kSwerveCanBus = new CANBus("Swerve");
   public static final CANBus kManipulatorCanBus = new CANBus("rio");
   public static final int kFunnelMotorId = 0;
-  public static final int kClimberMotorId = 0;
+  public static final int kClimberMotorId = 20;
   public static final int kElevatorLeaderId = 17;
   public static final int kElevatorFollowerId = 18;
   public static final int kManipulatorMotorId = 1;
