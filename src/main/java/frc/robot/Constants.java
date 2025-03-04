@@ -19,19 +19,25 @@ public class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final CANBus kSwerveCanBus = new CANBus("Swerve");
   public static final CANBus kManipulatorCanBus = new CANBus("rio");
-  public static final int kFunnelMotorId = 0;
   public static final int kClimberMotorId = 20;
   public static final int kElevatorLeaderId = 17;
   public static final int kElevatorFollowerId = 18;
   public static final int kManipulatorMotorId = 1;
-  public static final int kCanRangeId = 19;
+  public static final int kManipulatorSensorId = 19;
+  public static final int kFunnelSensorId = 20;
   public static final Frequency kUnimportantUpdateRate = Hertz.of(50);
 
   public static final AudioConfigs kAudioConfigs =
       new AudioConfigs().withBeepOnConfig(true).withBeepOnBoot(true).withAllowMusicDurDisable(true);
+  public static final double loopPeriodSecs = 0.02;
+  public static final boolean tuningMode = false;
   public static double kSomewhatImportantUpdateRate = 100;
   public static double kImportantUpdateRate = 250;
-  public static final double loopPeriodSecs = 0.02;
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
+  }
 
   public enum Mode {
     /** Running on a real robot. */
@@ -42,12 +48,5 @@ public class Constants {
 
     /** Replaying from a log file. */
     REPLAY
-  }
-
-  public static final boolean tuningMode = false;
-  public static boolean disableHAL = false;
-
-  public static void disableHAL() {
-    disableHAL = true;
   }
 }

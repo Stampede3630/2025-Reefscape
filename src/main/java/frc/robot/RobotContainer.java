@@ -7,8 +7,6 @@
 
 package frc.robot;
 
-import static frc.robot.subsystems.vision.VisionConstants.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.NamedCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
@@ -36,6 +35,9 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import static edu.wpi.first.units.Units.Seconds;
+import static frc.robot.subsystems.vision.VisionConstants.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -56,14 +58,16 @@ public class RobotContainer {
   private final Elevator elevator;
   private final Manipulator manipulator;
   private final Climber climber;
-  private LoggedNetworkNumber selectedPosition = new LoggedNetworkNumber("ElevatorReference", 1);
-  private LoggedNetworkNumber outtakeSpeed =
+  private final LoggedNetworkNumber selectedPosition =
+      new LoggedNetworkNumber("ElevatorReference", 1);
+  private final LoggedNetworkNumber outtakeSpeed =
       new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
-  private LoggedNetworkNumber intakeSpeed =
+  private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
-  private LoggedNetworkNumber climberTorqueCurrent =
+  private final LoggedNetworkNumber climberTorqueCurrent =
       new LoggedNetworkNumber("Climber/torqueCurrent", 10);
-  private LoggedNetworkNumber driveTc = new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
+  private final LoggedNetworkNumber driveTc =
+      new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -121,6 +125,8 @@ public class RobotContainer {
         climber = new Climber(new ClimberIO() {});
         break;
     }
+
+    new NamedCommands(drive, climber, elevator, manipulator, vision);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -222,6 +228,11 @@ public class RobotContainer {
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
     controller.rightBumper().whileTrue(DriveCommands.tcOpenLoop(drive, driveTc::get));
+
+    manipulator
+        .funnelTof()
+        .onTrue(
+            elevator.setPositionBlocking(() -> 1, Seconds.of(2)).andThen(manipulator.autoIntake()));
   }
 
   /**

@@ -32,6 +32,7 @@ public interface ManipulatorIO {
     public double statorCurrent = 0.0;
     public double supplyCurrent = 0.0;
     public double temp = 0.0;
-    public double tofDistance = 0.0;
+    public double manipulatorTofDistance = 0.0;
+    public double funnelTofDistance = 0.0;
   }
 }
