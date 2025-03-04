@@ -53,12 +53,12 @@ public class TunerConstants {
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
       new Slot0Configs()
-          .withKP(0.040759)
+          .withKP(20) // 0.040759
           .withKI(0)
           .withKD(0)
           .withKS(4.94104)
-          .withKV(1.60572)
-          .withKA(0.60906 * 2.0 * Math.PI);
+          .withKV(1) // 1.60572
+          .withKA(10); // deosnt' do anythign
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
   private static final ClosedLoopOutputType kSteerClosedLoopOutput = ClosedLoopOutputType.Voltage;
@@ -97,16 +97,16 @@ public class TunerConstants {
       new Pigeon2Configuration()
           .withMountPose(
               new MountPoseConfigs()
-                  .withMountPoseYaw(90)
-                  .withMountPosePitch(90)
-                  .withMountPoseRoll(0));
+                  .withMountPoseYaw(178.85037231445312)
+                  .withMountPosePitch(0.13573825359344482)
+                  .withMountPoseRoll(-89.86532592773438));
   // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
   // This may need to be tuned to your individual robot
   private static final double kCoupleRatio = 3.5714285714285716; // TODO Fix this
 
   private static final double kDriveGearRatio = 7.125;
   private static final double kSteerGearRatio = 21.428571428571427;
-  private static final Distance kWheelRadius = Inches.of(2);
+  private static final Distance kWheelRadius = Inches.of(2.27);
 
   private static final boolean kInvertLeftSide = false;
   private static final boolean kInvertRightSide = true;

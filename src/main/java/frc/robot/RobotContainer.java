@@ -63,6 +63,7 @@ public class RobotContainer {
       new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
   private LoggedNetworkNumber climberTorqueCurrent =
       new LoggedNetworkNumber("Climber/torqueCurrent", 10);
+  private LoggedNetworkNumber driveTc = new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -164,13 +165,13 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    // Default command, normal field-relative drive
+    //     Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> -controller.getRightX() / 2.0));
 
     // ELEVATOR
     controller.a().onTrue(elevator.setPosition(() -> selectedPosition.get()));
@@ -219,6 +220,8 @@ public class RobotContainer {
                 .ignoringDisable(true));
     controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
+
+    controller.rightBumper().whileTrue(DriveCommands.tcOpenLoop(drive, driveTc::get));
   }
 
   /**

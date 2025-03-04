@@ -214,6 +214,10 @@ public class DriveCommands {
                 }));
   }
 
+  public static Command tcOpenLoop(Drive drive, DoubleSupplier tc) {
+    return Commands.runEnd(() -> drive.runCharacterization(tc.getAsDouble()), drive::stop);
+  }
+
   /** Measures the robot's wheel radius by spinning in a circle. */
   public static Command wheelRadiusCharacterization(Drive drive) {
     SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
