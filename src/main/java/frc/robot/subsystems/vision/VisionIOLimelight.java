@@ -7,9 +7,7 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
@@ -107,6 +105,20 @@ public class VisionIOLimelight implements VisionIO {
 
               // Observation type
               PoseObservationType.MEGATAG_1));
+      //      var supposedlyRobot =
+      //          new Pose3d(
+      //                  new Translation3d(4.073905999999999, 4.745482, 0.308102),
+      //                  new Rotation3d(new Quaternion(0.5, 0, 0, 0.8660254037844386)))
+      //              .plus(new Transform3d(0.46355, 0, -0.308102, new Rotation3d(0, 0, Math.PI)));
+      //      Logger.recordOutput("camto19",
+      // parsePose(rawSample.value).relativeTo(supposedlyRobot));
+      //      Logger.recordOutput("supposedlyRObot", supposedlyRobot);
+      //
+      //      Logger.recordOutput(
+      //          "supposedly Tag",
+      //          new Pose3d(
+      //              new Translation3d(4.073905999999999, 4.745482, 0.308102),
+      //              new Rotation3d(new Quaternion(0.5, 0, 0, 0.8660254037844386))));
     }
     for (var rawSample : megatag2Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
@@ -132,6 +144,26 @@ public class VisionIOLimelight implements VisionIO {
 
               // Observation type
               PoseObservationType.MEGATAG_2));
+      /*
+             "translation": {
+         "x": 4.073905999999999,
+         "y": 4.745482,
+         "z": 0.308102
+       },
+       "rotation": {
+         "quaternion": {
+           "W": 0.5000000000000001,
+           "X": 0.0,
+           "Y": 0.0,
+           "Z": 0.8660254037844386
+         }
+       }
+      */
+
+      //      Logger.recordOutput(
+      //              "camto19",
+      //              parsePose(rawSample.value).relativeTo()
+      //                      );
     }
 
     // Save pose observations to inputs object
