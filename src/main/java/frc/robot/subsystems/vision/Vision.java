@@ -7,28 +7,26 @@
 
 package frc.robot.subsystems.vision;
 
-import static frc.robot.subsystems.vision.VisionConstants.*;
-
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
-import java.util.LinkedList;
-import java.util.List;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.*;
+
+import static frc.robot.subsystems.vision.VisionConstants.*;
 
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
+
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
@@ -69,7 +67,8 @@ public class Vision extends SubsystemBase {
     List<Pose3d> allRobotPoses = new LinkedList<>();
     List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
     List<Pose3d> allRobotPosesRejected = new LinkedList<>();
-
+    List<RobotState.VisionObservation> allVisionObservations = new ArrayList<>();
+    Map<Integer, RobotState.TxTyObservation> allTxTyObservations = new HashMap<>();
     // Loop over cameras
     for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
       // Update disconnected alert
@@ -84,10 +83,16 @@ public class Vision extends SubsystemBase {
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
-        if (tagPose.isPresent()) {
-          tagPoses.add(tagPose.get());
-        }
+          tagPose.ifPresent(tagPoses::add);
       }
+      // Loop over txTy observations
+        for (var observation : inputs[cameraIndex].txTyObservations) {
+          if (!allTxTyObservations.containsKey(observation.tagId())
+              || observation.distance() < allTxTyObservations.get(observation.tagId()).distance()) {
+            allTxTyObservations.put(observation.tagId(), observation);
+          }
+        }
+
 
       // Loop over pose observations
       for (var observation : inputs[cameraIndex].poseObservations) {
@@ -132,11 +137,13 @@ public class Vision extends SubsystemBase {
           angularStdDev *= cameraStdDevFactors[cameraIndex];
         }
 
+        RobotState.VisionObservation visionObservation = new RobotState.VisionObservation(
+            observation.pose().toPose2d(), observation.timestamp(), VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+        allVisionObservations.add(visionObservation
+            );
+
         // Send vision observation
-        consumer.accept(
-            observation.pose().toPose2d(),
-            observation.timestamp(),
-            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+        consumer.accept(visionObservation);
       }
 
       // Log camera datadata
@@ -156,6 +163,10 @@ public class Vision extends SubsystemBase {
       allRobotPoses.addAll(robotPoses);
       allRobotPosesAccepted.addAll(robotPosesAccepted);
       allRobotPosesRejected.addAll(robotPosesRejected);
+
+      // Send results to robot state
+
+      allTxTyObservations.values().stream().forEach(RobotState.getInstance()::addTxTyObservation);
     }
 
     // Log summary data
@@ -171,11 +182,16 @@ public class Vision extends SubsystemBase {
         allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
   }
 
-  @FunctionalInterface
-  public interface VisionConsumer {
-    void accept(
-        Pose2d visionRobotPoseMeters,
-        double timestampSeconds,
-        Matrix<N3, N1> visionMeasurementStdDevs);
-  }
+//  @FunctionalInterface
+//  public interface VisionConsumer {
+//    void accept(
+//        Pose2d visionRobotPoseMeters,
+//        double timestampSeconds,
+//        Matrix<N3, N1> visionMeasurementStdDevs);
+//  }
+@FunctionalInterface
+public interface VisionConsumer {
+  void accept(
+      RobotState.VisionObservation observation);
+}
 }

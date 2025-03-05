@@ -7,13 +7,14 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
-import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.RobotState;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,8 +29,10 @@ public class VisionIOLimelight implements VisionIO {
   private final DoubleSubscriber latencySubscriber;
   private final DoubleSubscriber txSubscriber;
   private final DoubleSubscriber tySubscriber;
+  private final DoubleArraySubscriber rawfiducialsSubscriber;
   private final DoubleArraySubscriber megatag1Subscriber;
   private final DoubleArraySubscriber megatag2Subscriber;
+  private final int id;
 
   /**
    * Creates a new VisionIOLimelight.
@@ -37,14 +40,17 @@ public class VisionIOLimelight implements VisionIO {
    * @param name The configured name of the Limelight.
    * @param rotationSupplier Supplier for the current estimated rotation, used for MegaTag 2.
    */
-  public VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
+  public VisionIOLimelight(int id, String name, Supplier<Rotation2d> rotationSupplier) {
+    this.id = id;
     var table = NetworkTableInstance.getDefault().getTable(name);
     this.rotationSupplier = rotationSupplier;
     orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
+
     latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
     txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
     tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
     megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
+    rawfiducialsSubscriber = table.getDoubleArrayTopic("rawfiducials").subscribe(new double[] {});
     megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
   }
@@ -68,9 +74,26 @@ public class VisionIOLimelight implements VisionIO {
         ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
 
     // Update target observation
+    TimestampedDoubleArray[] rawfiducials = rawfiducialsSubscriber.readQueue();
     inputs.latestTargetObservation =
-        new TargetObservation(
-            Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+          new TargetObservation(
+              Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+
+    List<RobotState.TxTyObservation> txTyObservations = new LinkedList<>();
+    for (var rawSample : rawfiducials) {
+      if (rawSample.value.length == 0) continue;
+      txTyObservations.add( new RobotState.TxTyObservation((int) rawSample.value[0],
+          id,
+          new double[] {rawSample.value[1]},
+          new double[] {rawSample.value[2]},
+          rawSample.value[5], rawSample.timestamp));
+    }
+
+    // Save tag observations to inputs object
+    inputs.txTyObservations = new RobotState.TxTyObservation[txTyObservations.size()];
+    for (int i = 0; i < txTyObservations.size(); i++) {
+      inputs.txTyObservations[i] = txTyObservations.get(i);
+    }
 
     // Update orientation for MegaTag 2
     orientationPublisher.accept(
@@ -144,27 +167,8 @@ public class VisionIOLimelight implements VisionIO {
 
               // Observation type
               PoseObservationType.MEGATAG_2));
-      /*
-             "translation": {
-         "x": 4.073905999999999,
-         "y": 4.745482,
-         "z": 0.308102
-       },
-       "rotation": {
-         "quaternion": {
-           "W": 0.5000000000000001,
-           "X": 0.0,
-           "Y": 0.0,
-           "Z": 0.8660254037844386
-         }
-       }
-      */
-
-      //      Logger.recordOutput(
-      //              "camto19",
-      //              parsePose(rawSample.value).relativeTo()
-      //                      );
     }
+
 
     // Save pose observations to inputs object
     inputs.poseObservations = new PoseObservation[poseObservations.size()];
