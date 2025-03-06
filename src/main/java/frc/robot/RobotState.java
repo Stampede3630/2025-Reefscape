@@ -21,16 +21,16 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
-import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.*;
 
 @ExtensionMethod({GeomUtil.class})
 public class RobotState {
@@ -43,7 +43,6 @@ public class RobotState {
       new LoggedTunableNumber("RobotState/MaxDistanceTagPoseBlend", Units.inchesToMeters(36.0));
 
   private static final double poseBufferSizeSec = 2.0;
-  private static final double algaePersistanceTime = 2.0;
   private static final Matrix<N3, N1> odometryStateStdDevs =
       new Matrix<>(VecBuilder.fill(0.003, 0.003, 0.002));
   private static final Map<Integer, Pose2d> tagPoses2d = new HashMap<>();
@@ -79,8 +78,6 @@ public class RobotState {
       };
   // Assume gyro starts at zero
   private Rotation2d gyroOffset = new Rotation2d();
-  private Set<AlgaePoseRecord> algaePoses = new HashSet<>();
-
   @Getter
   @AutoLogOutput(key = "RobotState/RobotVelocity")
   private ChassisSpeeds robotVelocity = new ChassisSpeeds();
@@ -103,6 +100,11 @@ public class RobotState {
     return instance;
   }
 
+
+  /**
+   * Resets the robot odometry to the given pose. Use in Pathplanner and for "zeroing" gyro.
+   * @param pose the pose to reset the odometry to
+   */
   public void resetPose(Pose2d pose) {
     // Gyro offset is the rotation that maps the old gyro rotation (estimated - offset) to the new
     // frame of rotation
@@ -112,6 +114,10 @@ public class RobotState {
     poseBuffer.clear();
   }
 
+  /**
+   * Adds an odometry observation (encoders) to the robot state. This is used to update the robot's pose.
+   * @param observation the odometry observation to add
+   */
   public void addOdometryObservation(OdometryObservation observation) {
     Twist2d twist = kinematics.toTwist2d(lastWheelPositions, observation.wheelPositions());
     lastWheelPositions = observation.wheelPositions();
@@ -135,6 +141,10 @@ public class RobotState {
     odometryPose = observation.visionPose;
   }
 
+  /**
+   * Adds a vision observation to the robot state. This is used to update the robot's pose.
+   * @param observation the vision observation to add
+   */
   public void addVisionObservation(VisionObservation observation) {
     // If measurement is old enough to be outside the pose buffer's timespan, skip.
     try {
@@ -191,6 +201,10 @@ public class RobotState {
     estimatedPose = estimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
   }
 
+  /**
+   * Adds a tx/ty observation to the robot state. This is used to update set of ty/ty poses based on individual tags.
+   * @param observation the tx/ty observation to add
+   */
   public void addTxTyObservation(TxTyObservation observation) {
     // Skip if current data for tag is newer
     if (txTyPoses.containsKey(observation.tagId())
@@ -207,17 +221,10 @@ public class RobotState {
     Rotation2d robotRotation =
         estimatedPose.transformBy(new Transform2d(odometryPose, sample.get())).getRotation();
 
-    // Average tx's and ty's
     double tx = observation.tx();
     double ty = observation.ty();
-    //    for (int i = 0; i < 1; i++) {
-    //      tx += observation.tx()[i];
-    //      ty += observation.ty()[i];
-    //    }
-    //    tx /= 1.0;
-    //    ty /= 1.0;
 
-    Pose3d cameraPose = VisionConstants.cameraPoses[observation.camera];
+    Pose3d cameraPose = Pose3d.kZero.transformBy(observation.cameraPose);
 
     // Use 3D distance and tag angles to find robot pose
     Translation2d camToTagTranslation =
@@ -249,16 +256,23 @@ public class RobotState {
         new TxTyPoseRecord(robotPose, camToTagTranslation.getNorm(), observation.timestamp()));
   }
 
+  /**
+   * Adds a chassis speeds observation.
+   * @param speeds the ROBOT RELATIVE chassis speeds observation to add
+   */
   public void addDriveSpeeds(ChassisSpeeds speeds) {
     robotVelocity = speeds;
   }
 
+  /**
+   * @return the field velocity of the robot from the {@link #addDriveSpeeds(ChassisSpeeds)} method.
+   */
   @AutoLogOutput(key = "RobotState/FieldVelocity")
   public ChassisSpeeds getFieldVelocity() {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
-  /** Get 2d pose estimate of robot if not stale. */
+  /** Get 2d pose estimate of robot using the associated tx/ty estimate from the given tag, if not stale. */
   public Optional<Pose2d> getTxTyPose(int tagId) {
     if (!txTyPoses.containsKey(tagId)) {
       return Optional.empty();
@@ -276,7 +290,7 @@ public class RobotState {
 
   /**
    * Get estimated pose using txty data given tagId on reef and aligned pose on reef. Used for algae
-   * intaking and coral scoring.
+   * intaking and coral scoring. Uses a blend of the estimated pose and the tx/ty tag pose based on the distance from the reef.
    */
   public Pose2d getReefPose(int face, Pose2d finalPose) {
     final boolean isRed = AllianceFlipUtil.shouldFlip();
@@ -309,7 +323,7 @@ public class RobotState {
   }
 
   public void periodicLog() {
-    // Log tx/ty poses
+    // Log tx/ty poses for ALL tags
     Pose2d[] tagPoses = new Pose2d[FieldConstants.aprilTagCount + 1];
     for (int i = 0; i < FieldConstants.aprilTagCount + 1; i++) {
       tagPoses[i] = getTxTyPose(i).orElse(Pose2d.kZero);
@@ -323,11 +337,9 @@ public class RobotState {
   public record VisionObservation(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {}
 
   public record TxTyObservation(
-      int tagId, int camera, double tx, double ty, double distance, double timestamp) {}
+      int tagId, Transform3d cameraPose, double tx, double ty, double distance, double timestamp) {}
 
   public record TxTyPoseRecord(Pose2d pose, double distance, double timestamp) {}
-
-  public record AlgaeTxTyObservation(int camera, double[] tx, double[] ty, double timestamp) {}
 
   public record AlgaePoseRecord(Translation2d translation, double timestamp) {}
 }
