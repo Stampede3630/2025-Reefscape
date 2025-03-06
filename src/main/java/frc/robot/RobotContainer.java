@@ -9,7 +9,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -33,10 +33,7 @@ import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.*;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -47,6 +44,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private final RobotState robotState = RobotState.getInstance();
   // Subsystems
   private final Drive drive;
   private final Vision vision;
@@ -84,7 +82,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 RobotState.getInstance()::addVisionObservation,
-                new VisionIOLimelight(0, camera0Name, drive::getRotation));
+                new VisionIOLimelight(
+                    VisionConstants.limelightPose, camera0Name, robotState::getRotation));
         elevator = new Elevator(new ElevatorIOTalonFX());
         manipulator = new Manipulator(new ManipulatorIOTalonFX());
         climber = new Climber(new ClimberIOTalonFX());
@@ -101,8 +100,9 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackRight));
         vision =
             new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
+                RobotState.getInstance()::addVisionObservation,
+                new VisionIOPhotonVisionSim(
+                    camera0Name, limelightPose, RobotState.getInstance()::getEstimatedPose));
         elevator = new Elevator(new ElevatorIO() {});
         manipulator = new Manipulator(new ManipulatorIO() {});
         climber = new Climber(new ClimberIO() {});
@@ -117,7 +117,11 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        vision =
+            new Vision(
+                RobotState.getInstance()::addVisionObservation,
+                new VisionIO() {},
+                new VisionIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         manipulator = new Manipulator(new ManipulatorIO() {});
         climber = new Climber(new ClimberIO() {});
@@ -177,12 +181,12 @@ public class RobotContainer {
             () -> -controller.getRightX()));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(() -> selectedPosition.get()));
+    controller.a().onTrue(elevator.setPosition(selectedPosition::get));
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
-    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> outtakeSpeed.get()));
+    controller.rightTrigger().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
     controller
         .leftTrigger()
         .whileTrue(elevator.setPosition(() -> 1).andThen(manipulator.autoIntake()));
@@ -217,8 +221,9 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                     () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                        robotState.resetPose(
+                            new Pose2d(
+                                robotState.getEstimatedPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
     controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
