@@ -1,5 +1,5 @@
-// Copyright (c) 2025 FRC 6328
-// http://github.com/Mechanical-Advantage
+// Copyright (c) 2025 FRC 3630
+// https://github.com/Stampede3630
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file at
@@ -23,11 +23,10 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
-import org.littletonrobotics.junction.Logger;
-
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class AutoScore {
   public static final LoggedTunableNumber minDistanceReefClearAlgae =
@@ -79,40 +78,41 @@ public class AutoScore {
 
   private AutoScore() {}
 
-    public static Command getAutoDrive(      Drive drive,
-                                             Supplier<ReefLevel> reefLevel,
-                                             Supplier<Optional<CoralObjective>> coralObjective,
-                                             DoubleSupplier driverX,
-                                             DoubleSupplier driverY,
-                                             DoubleSupplier driverOmega) {
-        Supplier<Pose2d> robot =
-            () ->
-                coralObjective
-                    .get()
-                    .map(AutoScore::getRobotPose)
-                    .orElseGet(() -> RobotState.getInstance().getEstimatedPose());
-        return new DriveToPose(
-            drive,
-            () ->
-                coralObjective
-                    .get()
-                    .map(
-                        objective -> {
-                            if (reefLevel.get() == ReefLevel.L1) {
-                                return getDriveTarget(
-                                    robot.get(), AllianceFlipUtil.apply(getL1Pose(objective)));
-                            }
-                            Pose2d goalPose = getCoralScorePose(objective);
-                            return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
-                        })
-                    .orElseGet(() -> RobotState.getInstance().getEstimatedPose()),
-            robot,
-            () ->
-                DriveCommands.getLinearVelocityFromJoysticks(
-                        driverX.getAsDouble(), driverY.getAsDouble())
-                    .times(AllianceFlipUtil.shouldFlip() ? -1.0 : 1.0),
-            () -> DriveCommands.getOmegaFromJoysticks(driverOmega.getAsDouble()));
-    }
+  public static Command getAutoDrive(
+      Drive drive,
+      Supplier<ReefLevel> reefLevel,
+      Supplier<Optional<CoralObjective>> coralObjective,
+      DoubleSupplier driverX,
+      DoubleSupplier driverY,
+      DoubleSupplier driverOmega) {
+    Supplier<Pose2d> robot =
+        () ->
+            coralObjective
+                .get()
+                .map(AutoScore::getRobotPose)
+                .orElseGet(() -> RobotState.getInstance().getEstimatedPose());
+    return new DriveToPose(
+        drive,
+        () ->
+            coralObjective
+                .get()
+                .map(
+                    objective -> {
+                      if (reefLevel.get() == ReefLevel.L1) {
+                        return getDriveTarget(
+                            robot.get(), AllianceFlipUtil.apply(getL1Pose(objective)));
+                      }
+                      Pose2d goalPose = getCoralScorePose(objective);
+                      return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
+                    })
+                .orElseGet(() -> RobotState.getInstance().getEstimatedPose()),
+        robot,
+        () ->
+            DriveCommands.getLinearVelocityFromJoysticks(
+                    driverX.getAsDouble(), driverY.getAsDouble())
+                .times(AllianceFlipUtil.shouldFlip() ? -1.0 : 1.0),
+        () -> DriveCommands.getOmegaFromJoysticks(driverOmega.getAsDouble()));
+  }
 
   /** Get drive target. */
   public static Pose2d getDriveTarget(Pose2d robot, Pose2d goal) {
@@ -137,7 +137,6 @@ public class AutoScore {
     return getBranchPose(coralObjective);
   }
 
-
   private static Pose2d getL1Pose(CoralObjective coralObjective) {
     int face = coralObjective.branchId() / 2;
     return Reef.centerFaces[face].transformBy(
@@ -152,14 +151,20 @@ public class AutoScore {
     final double distanceToReefCenter =
         AllianceFlipUtil.apply(robot).getTranslation().getDistance(Reef.center);
     Logger.recordOutput("AutoScore/DistanceToReefCenter", distanceToReefCenter);
-    return distanceToReefCenter <= reefRadius + (TunerConstants.BackLeft.LocationX-TunerConstants.BackRight.LocationX) / 2.0 + distance;
+    return distanceToReefCenter
+        <= reefRadius
+            + (TunerConstants.BackLeft.LocationX - TunerConstants.BackRight.LocationX) / 2.0
+            + distance;
   }
 
   public static boolean outOfDistanceToReef(Pose2d robot, double distance) {
     final double distanceToReefCenter =
         AllianceFlipUtil.apply(robot).getTranslation().getDistance(Reef.center);
     Logger.recordOutput("AutoScore/DistanceToReefCenter", distanceToReefCenter);
-    return distanceToReefCenter >= reefRadius + (TunerConstants.BackLeft.LocationX-TunerConstants.BackRight.LocationX) / 2.0 + distance;
+    return distanceToReefCenter
+        >= reefRadius
+            + (TunerConstants.BackLeft.LocationX - TunerConstants.BackRight.LocationX) / 2.0
+            + distance;
   }
 
   public static Pose2d getRobotPose(CoralObjective coralObjective) {

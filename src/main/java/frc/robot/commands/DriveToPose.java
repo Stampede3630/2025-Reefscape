@@ -238,6 +238,7 @@ public class DriveToPose extends Command {
               lastSetpointTranslation,
               Rotation2d.fromRadians(thetaController.getSetpoint().position))
         });
+    Logger.recordOutput("DriveToPose/robotgiver", robot.get());
     Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {targetPose});
   }
 

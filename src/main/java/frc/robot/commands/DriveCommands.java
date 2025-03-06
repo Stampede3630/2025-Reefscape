@@ -23,14 +23,13 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
-import org.littletonrobotics.junction.Logger;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
@@ -45,10 +44,10 @@ public class DriveCommands {
 
   private DriveCommands() {}
 
-    public static double getOmegaFromJoysticks(double driverOmega) {
-        double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
-        return omega * omega * Math.signum(omega);
-    }
+  public static double getOmegaFromJoysticks(double driverOmega) {
+    double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
+    return omega * omega * Math.signum(omega);
+  }
 
   public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband

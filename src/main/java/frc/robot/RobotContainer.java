@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -35,10 +39,6 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
-import static edu.wpi.first.units.Units.Seconds;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -224,21 +224,25 @@ public class RobotContainer {
     controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
-//    controller.rightBumper().whileTrue(DriveCommands.tcOpenLoop(drive, driveTc::get));
+    //    controller.rightBumper().whileTrue(DriveCommands.tcOpenLoop(drive, driveTc::get));
 
-
-    controller.rightBumper().whileTrue(AutoScore.getAutoDrive(drive, () -> FieldConstants.ReefLevel.L4,
-        () -> java.util.Optional.of(new FieldConstants.CoralObjective(1, FieldConstants.ReefLevel.L4)),
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRightX()
-    ));
+    controller
+        .rightBumper()
+        .whileTrue(
+            AutoScore.getAutoDrive(
+                drive,
+                () -> FieldConstants.ReefLevel.L4,
+                () ->
+                    java.util.Optional.of(
+                        new FieldConstants.CoralObjective(1, FieldConstants.ReefLevel.L4)),
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX()));
     manipulator
         .funnelTof()
         .onTrue(
             elevator.setPositionBlocking(() -> 0, Seconds.of(2)).andThen(manipulator.autoIntake()));
   }
-
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

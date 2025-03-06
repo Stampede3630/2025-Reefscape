@@ -14,7 +14,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.RobotState;
-
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,17 +75,20 @@ public class VisionIOLimelight implements VisionIO {
     // Update target observation
     TimestampedDoubleArray[] rawfiducials = rawfiducialsSubscriber.readQueue();
     inputs.latestTargetObservation =
-          new TargetObservation(
-              Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+        new TargetObservation(
+            Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
 
     List<RobotState.TxTyObservation> txTyObservations = new LinkedList<>();
     for (var rawSample : rawfiducials) {
       if (rawSample.value.length == 0) continue;
-      txTyObservations.add( new RobotState.TxTyObservation((int) rawSample.value[0],
-          id,
-          new double[] {rawSample.value[1]},
-          new double[] {rawSample.value[2]},
-          rawSample.value[5], rawSample.timestamp));
+      txTyObservations.add(
+          new RobotState.TxTyObservation(
+              (int) rawSample.value[0],
+              id,
+              Math.toRadians(rawSample.value[1]),
+              Math.toRadians(rawSample.value[2]),
+              rawSample.value[5],
+              rawSample.timestamp));
     }
 
     // Save tag observations to inputs object
@@ -143,32 +145,31 @@ public class VisionIOLimelight implements VisionIO {
       //              new Translation3d(4.073905999999999, 4.745482, 0.308102),
       //              new Rotation3d(new Quaternion(0.5, 0, 0, 0.8660254037844386))));
     }
-    for (var rawSample : megatag2Subscriber.readQueue()) {
-      if (rawSample.value.length == 0) continue;
-      for (int i = 11; i < rawSample.value.length; i += 7) {
-        tagIds.add((int) rawSample.value[i]);
-      }
-      poseObservations.add(
-          new PoseObservation(
-              // Timestamp, based on server timestamp of publish and latency
-              rawSample.timestamp * 1.0e-6 - rawSample.value[6] * 1.0e-3,
-
-              // 3D pose estimate
-              parsePose(rawSample.value),
-
-              // Ambiguity, zeroed because the pose is already disambiguated
-              0.0,
-
-              // Tag count
-              (int) rawSample.value[7],
-
-              // Average tag distance
-              rawSample.value[9],
-
-              // Observation type
-              PoseObservationType.MEGATAG_2));
-    }
-
+    //    for (var rawSample : megatag2Subscriber.readQueue()) {
+    //      if (rawSample.value.length == 0) continue;
+    //      for (int i = 11; i < rawSample.value.length; i += 7) {
+    //        tagIds.add((int) rawSample.value[i]);
+    //      }
+    //      poseObservations.add(
+    //          new PoseObservation(
+    //              // Timestamp, based on server timestamp of publish and latency
+    //              rawSample.timestamp * 1.0e-6 - rawSample.value[6] * 1.0e-3,
+    //
+    //              // 3D pose estimate
+    //              parsePose(rawSample.value),
+    //
+    //              // Ambiguity, zeroed because the pose is already disambiguated
+    //              0.0,
+    //
+    //              // Tag count
+    //              (int) rawSample.value[7],
+    //
+    //              // Average tag distance
+    //              rawSample.value[9],
+    //
+    //              // Observation type
+    //              PoseObservationType.MEGATAG_2));
+    //    }
 
     // Save pose observations to inputs object
     inputs.poseObservations = new PoseObservation[poseObservations.size()];

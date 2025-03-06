@@ -7,26 +7,25 @@
 
 package frc.robot.subsystems.vision;
 
+import static frc.robot.subsystems.vision.VisionConstants.*;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
-import org.littletonrobotics.junction.Logger;
-
 import java.util.*;
-
-import static frc.robot.subsystems.vision.VisionConstants.*;
+import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
-
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
@@ -83,16 +82,15 @@ public class Vision extends SubsystemBase {
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
-          tagPose.ifPresent(tagPoses::add);
+        tagPose.ifPresent(tagPoses::add);
       }
       // Loop over txTy observations
-        for (var observation : inputs[cameraIndex].txTyObservations) {
-          if (!allTxTyObservations.containsKey(observation.tagId())
-              || observation.distance() < allTxTyObservations.get(observation.tagId()).distance()) {
-            allTxTyObservations.put(observation.tagId(), observation);
-          }
+      for (var observation : inputs[cameraIndex].txTyObservations) {
+        if (!allTxTyObservations.containsKey(observation.tagId())
+            || observation.distance() < allTxTyObservations.get(observation.tagId()).distance()) {
+          allTxTyObservations.put(observation.tagId(), observation);
         }
-
+      }
 
       // Loop over pose observations
       for (var observation : inputs[cameraIndex].poseObservations) {
@@ -137,10 +135,16 @@ public class Vision extends SubsystemBase {
           angularStdDev *= cameraStdDevFactors[cameraIndex];
         }
 
-        RobotState.VisionObservation visionObservation = new RobotState.VisionObservation(
-            observation.pose().toPose2d(), observation.timestamp(), VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
-        allVisionObservations.add(visionObservation
-            );
+        RobotState.VisionObservation visionObservation =
+            new RobotState.VisionObservation(
+                observation.pose().toPose2d(),
+                observation.timestamp(),
+                VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+        allVisionObservations.add(visionObservation);
+
+        if (DriverStation.isDisabled()) {
+          RobotState.getInstance().seedToVisionObservation(visionObservation);
+        }
 
         // Send vision observation
         consumer.accept(visionObservation);
@@ -182,16 +186,15 @@ public class Vision extends SubsystemBase {
         allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
   }
 
-//  @FunctionalInterface
-//  public interface VisionConsumer {
-//    void accept(
-//        Pose2d visionRobotPoseMeters,
-//        double timestampSeconds,
-//        Matrix<N3, N1> visionMeasurementStdDevs);
-//  }
-@FunctionalInterface
-public interface VisionConsumer {
-  void accept(
-      RobotState.VisionObservation observation);
-}
+  //  @FunctionalInterface
+  //  public interface VisionConsumer {
+  //    void accept(
+  //        Pose2d visionRobotPoseMeters,
+  //        double timestampSeconds,
+  //        Matrix<N3, N1> visionMeasurementStdDevs);
+  //  }
+  @FunctionalInterface
+  public interface VisionConsumer {
+    void accept(RobotState.VisionObservation observation);
+  }
 }

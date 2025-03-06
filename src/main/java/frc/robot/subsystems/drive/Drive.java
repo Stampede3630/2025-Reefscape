@@ -7,6 +7,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
@@ -45,14 +47,11 @@ import frc.robot.RobotState;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.LoggedTracer;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
-
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static edu.wpi.first.units.Units.*;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
   public static final double DRIVE_BASE_RADIUS =
@@ -92,7 +91,8 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(getModuleTranslations());
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -227,8 +227,8 @@ public class Drive extends SubsystemBase {
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
 
-//      // Apply update
-//      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      //      // Apply update
+      //      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
       RobotState.getInstance()
           .addOdometryObservation(
               new RobotState.OdometryObservation(
@@ -395,8 +395,8 @@ public class Drive extends SubsystemBase {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
-  public void addVisionMeasurement(
-      RobotState.VisionObservation visionObservation) {
+
+  public void addVisionMeasurement(RobotState.VisionObservation visionObservation) {
     poseEstimator.addVisionMeasurement(
         visionObservation.visionPose(), visionObservation.timestamp(), visionObservation.stdDevs());
   }

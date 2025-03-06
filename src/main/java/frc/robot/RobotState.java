@@ -25,14 +25,12 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
+import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.ExtensionMethod;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @ExtensionMethod({GeomUtil.class})
 public class RobotState {
@@ -133,6 +131,10 @@ public class RobotState {
     estimatedPose = estimatedPose.exp(finalTwist);
   }
 
+  public void seedToVisionObservation(VisionObservation observation) {
+    odometryPose = observation.visionPose;
+  }
+
   public void addVisionObservation(VisionObservation observation) {
     // If measurement is old enough to be outside the pose buffer's timespan, skip.
     try {
@@ -206,14 +208,14 @@ public class RobotState {
         estimatedPose.transformBy(new Transform2d(odometryPose, sample.get())).getRotation();
 
     // Average tx's and ty's
-    double tx = 0.0;
-    double ty = 0.0;
-    for (int i = 0; i < 4; i++) {
-      tx += observation.tx()[i];
-      ty += observation.ty()[i];
-    }
-    tx /= 4.0;
-    ty /= 4.0;
+    double tx = observation.tx();
+    double ty = observation.ty();
+    //    for (int i = 0; i < 1; i++) {
+    //      tx += observation.tx()[i];
+    //      ty += observation.ty()[i];
+    //    }
+    //    tx /= 1.0;
+    //    ty /= 1.0;
 
     Pose3d cameraPose = VisionConstants.cameraPoses[observation.camera];
 
@@ -302,59 +304,6 @@ public class RobotState {
     return getEstimatedPose().interpolate(tagPose.get(), 1.0 - t);
   }
 
-  public void addAlgaeTxTyObservation(AlgaeTxTyObservation observation) {
-    var oldOdometryPose = poseBuffer.getSample(observation.timestamp());
-    if (oldOdometryPose.isEmpty()) {
-      return;
-    }
-    Pose2d fieldToRobot =
-        estimatedPose.transformBy(new Transform2d(odometryPose, oldOdometryPose.get()));
-    Pose3d robotToCamera = VisionConstants.cameraPoses[observation.camera];
-
-    // Average tx's and ty's
-    double tx = 0.0;
-    double ty = 0.0;
-    for (int i = 0; i < 4; i++) {
-      tx += observation.tx()[i];
-      ty += observation.ty()[i];
-    }
-    tx /= 4.0;
-    ty /= 4.0;
-    double cameraToAlgaeAngle = -robotToCamera.getRotation().getY() - ty;
-    if (cameraToAlgaeAngle >= 0) {
-      return;
-    }
-    double cameraToAlgaeNorm =
-        (FieldConstants.algaeDiameter / 2 - robotToCamera.getZ())
-            / Math.tan(-robotToCamera.getRotation().getY() - ty)
-            / Math.cos(-tx);
-    Pose2d fieldToCamera = fieldToRobot.transformBy(robotToCamera.toPose2d().toTransform2d());
-    Pose2d fieldToAlgae =
-        fieldToCamera
-            .transformBy(new Transform2d(Translation2d.kZero, new Rotation2d(-tx)))
-            .transformBy(
-                new Transform2d(new Translation2d(cameraToAlgaeNorm, 0), Rotation2d.kZero));
-    Translation2d fieldToAlgaeTranslation2d = fieldToAlgae.getTranslation();
-    AlgaePoseRecord algaePoseRecord =
-        new AlgaePoseRecord(fieldToAlgaeTranslation2d, observation.timestamp());
-
-    algaePoses =
-        algaePoses.stream()
-            .filter(
-                (x) ->
-                    x.translation.getDistance(fieldToAlgaeTranslation2d)
-                        > FieldConstants.algaeDiameter * .8)
-            .collect(Collectors.toSet());
-    algaePoses.add(algaePoseRecord);
-  }
-
-  public Set<Translation2d> getAlgaeTranslations() {
-    return algaePoses.stream()
-        .filter((x) -> Timer.getTimestamp() - x.timestamp() < algaePersistanceTime)
-        .map(AlgaePoseRecord::translation)
-        .collect(Collectors.toSet());
-  }
-
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();
   }
@@ -366,16 +315,6 @@ public class RobotState {
       tagPoses[i] = getTxTyPose(i).orElse(Pose2d.kZero);
     }
     Logger.recordOutput("RobotState/TxTyPoses", tagPoses);
-
-    // Log algae poses
-    Logger.recordOutput(
-        "RobotState/AlgaePoses",
-        getAlgaeTranslations().stream()
-            .map(
-                (translation) ->
-                    new Translation3d(
-                        translation.getX(), translation.getY(), FieldConstants.algaeDiameter / 2))
-            .toArray(Translation3d[]::new));
   }
 
   public record OdometryObservation(
@@ -384,7 +323,7 @@ public class RobotState {
   public record VisionObservation(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {}
 
   public record TxTyObservation(
-      int tagId, int camera, double[] tx, double[] ty, double distance, double timestamp) {}
+      int tagId, int camera, double tx, double ty, double distance, double timestamp) {}
 
   public record TxTyPoseRecord(Pose2d pose, double distance, double timestamp) {}
 
