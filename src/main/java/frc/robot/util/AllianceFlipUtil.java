@@ -12,6 +12,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 
+/**
+ * Utility class for flipping field coordinates based on the alliance color. Takes in blue
+ * coordinates and flips them to red.
+ */
 public class AllianceFlipUtil {
   public static double applyX(double x) {
     return shouldFlip() ? FieldConstants.fieldLength - x : x;
@@ -19,6 +23,24 @@ public class AllianceFlipUtil {
 
   public static double applyY(double y) {
     return shouldFlip() ? FieldConstants.fieldWidth - y : y;
+  }
+
+  public static Region2D apply(Region2D region) {
+    if (!shouldFlip()) {
+      return region;
+    }
+    return new Region2D(apply(region.getA()), apply(region.getB()));
+  }
+
+  public static Polygon apply(Polygon polygon) {
+    if (!shouldFlip()) {
+      return polygon;
+    }
+    Translation2d[] flipped = new Translation2d[polygon.getPolygon().length];
+    for (int i = 0; i < flipped.length; i++) {
+      flipped[i] = apply(polygon.getPolygon()[i]);
+    }
+    return new Polygon(flipped);
   }
 
   public static Translation2d apply(Translation2d translation) {

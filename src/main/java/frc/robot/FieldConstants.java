@@ -13,6 +13,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.util.Region2D;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -34,6 +35,9 @@ public class FieldConstants {
   public static final double aprilTagWidth = Units.inchesToMeters(6.50);
   public static final int aprilTagCount = 22;
   public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.NO_BARGE;
+
+  public static final Region2D topHalf = new Region2D(0, fieldWidth / 2.0, fieldLength, fieldWidth);
+  public static final Region2D bottomHalf = new Region2D(0, 0, fieldLength, fieldWidth / 2.0);
 
   public enum ReefLevel {
     L1(Units.inchesToMeters(25.0), 0),
@@ -150,6 +154,8 @@ public class FieldConstants {
             rightCenterFace.getX(),
             fieldWidth - rightCenterFace.getY(),
             Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
+    public static final Region2D leftRegion = new Region2D(0, fieldWidth, 5, fieldWidth - 3);
+    public static final Region2D rightRegion = new Region2D(0, 0, 5, 3);
   }
 
   public static class Reef {
@@ -228,6 +234,7 @@ public class FieldConstants {
     }
   }
 
+  /** Class the describes the positions of the three pre-staged algae + coral "ice creams" */
   public static class StagingPositions {
     // Measured from the center of the ice cream
     public static final double separation = Units.inchesToMeters(72.0);
