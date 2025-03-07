@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Mposition to H"
+            "pathName": "CagePosition7 to G"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoral7L4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "H to Left"
+            "pathName": "G to LSource"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Left to LSource"
+            "name": "intakeCoral"
           }
         },
         {
@@ -43,7 +43,7 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoral1L4"
           }
         }
       ]

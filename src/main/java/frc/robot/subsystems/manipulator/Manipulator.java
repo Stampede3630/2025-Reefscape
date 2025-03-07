@@ -56,8 +56,14 @@ public class Manipulator extends SubsystemBase {
     return startEnd(() -> io.runVelocity(velocity.getAsDouble()), io::stop);
   }
 
+  public Command outtake(DoubleSupplier velocity) {
+    Debouncer debouncer = new Debouncer(0.1);
+    return runVelocity(velocity)
+        .until(() -> debouncer.calculate(inputs.manipulatorTofDistance > 0.1));
+  }
+
   public Trigger funnelTof() {
-    return new Trigger(() -> inputs.funnelTofDistance < 0.1);
+    return new Trigger(() -> inputs.funnelTofDistance < 0.1).debounce(0.05);
   }
 
   public Command autoIntake() {

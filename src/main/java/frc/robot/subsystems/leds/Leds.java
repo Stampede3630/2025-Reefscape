@@ -7,12 +7,8 @@
 
 package frc.robot.subsystems.leds;
 
-import edu.wpi.first.wpilibj.AddressableLED;
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.FieldConstants;
@@ -22,50 +18,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Leds extends VirtualSubsystem {
-  private static Leds instance;
-
-  public static Leds getInstance() {
-    if (instance == null) {
-      instance = new Leds();
-    }
-    return instance;
-  }
-
-  // Robot state tracking
-  public int loopCycleCount = 0;
-  public boolean hpAttentionAlert = false;
-  public boolean endgameAlert = false;
-  public boolean autoScoringReef = false;
-  public boolean autoScoring = false;
-  public boolean superstructureCoast = false;
-  public boolean superstructureEstopped = false;
-  public boolean lowBatteryAlert = false;
-  public boolean characterizationMode = false;
-  public boolean visionDisconnected = false;
-  public boolean climbing = false;
-  public boolean coralGrabbed = false;
-  public Optional<FieldConstants.ReefLevel> firstPriorityLevel = Optional.empty();
-  public Optional<FieldConstants.ReefLevel> secondPriorityLevel = Optional.empty();
-  public FieldConstants.ReefLevel autoScoringLevel = FieldConstants.ReefLevel.L4;
-  public boolean firstPriorityBlocked = false;
-  public boolean secondPriorityBlocked = false;
-  public Color hexColor = Color.kBlack;
-  public Color secondaryHexColor = Color.kBlack;
-
-  private Optional<Alliance> alliance = Optional.empty();
-  private Color disabledColor = Color.kGold;
-  private Color secondaryDisabledColor = Color.kDarkBlue;
-  private boolean lastEnabledAuto = false;
-  private double lastEnabledTime = 0.0;
-  private boolean estopped = false;
-
-  // LED IO
-  private final AddressableLED leds;
-  private final AddressableLEDBuffer buffer;
-  private final Notifier loadingNotifier;
-
   // Constants
-  private static final boolean prideLeds = false;
+  private static final boolean prideLeds = true;
   private static final int minLoopCycleCount = 10;
   private static final int length = 300;
   private static final Section fullSection = new Section(0, length);
@@ -89,6 +43,37 @@ public class Leds extends VirtualSubsystem {
   private static final Color l2PriorityColor = Color.kCyan;
   private static final Color l3PriorityColor = Color.kBlue;
   private static final Color l4PriorityColor = Color.kPurple;
+  private static Leds instance;
+  // LED IO
+  private final AddressableLED leds;
+  private final AddressableLEDBuffer buffer;
+  private final Notifier loadingNotifier;
+  // Robot state tracking
+  public int loopCycleCount = 0;
+  public boolean hpAttentionAlert = false;
+  public boolean endgameAlert = false;
+  public boolean autoScoringReef = false;
+  public boolean autoScoring = false;
+  public boolean superstructureCoast = false;
+  public boolean superstructureEstopped = false;
+  public boolean lowBatteryAlert = false;
+  public boolean characterizationMode = false;
+  public boolean visionDisconnected = false;
+  public boolean climbing = false;
+  public boolean coralGrabbed = false;
+  public Optional<FieldConstants.ReefLevel> firstPriorityLevel = Optional.empty();
+  public Optional<FieldConstants.ReefLevel> secondPriorityLevel = Optional.empty();
+  public FieldConstants.ReefLevel autoScoringLevel = FieldConstants.ReefLevel.L4;
+  public boolean firstPriorityBlocked = false;
+  public boolean secondPriorityBlocked = false;
+  public Color hexColor = Color.kBlack;
+  public Color secondaryHexColor = Color.kBlack;
+  private Optional<Alliance> alliance = Optional.empty();
+  private Color disabledColor = Color.kGold;
+  private Color secondaryDisabledColor = Color.kDarkBlue;
+  private boolean lastEnabledAuto = false;
+  private double lastEnabledTime = 0.0;
+  private boolean estopped = false;
 
   private Leds() {
     leds = new AddressableLED(0);
@@ -110,6 +95,13 @@ public class Leds extends VirtualSubsystem {
               }
             });
     loadingNotifier.startPeriodic(0.02);
+  }
+
+  public static Leds getInstance() {
+    if (instance == null) {
+      instance = new Leds();
+    }
+    return instance;
   }
 
   public synchronized void periodic() {
@@ -346,8 +338,6 @@ public class Leds extends VirtualSubsystem {
     }
   }
 
-  private static record Section(int start, int end) {}
-
   private Color renderPriority(
       Optional<FieldConstants.ReefLevel> level, Boolean blocked, Section section) {
     Color primaryColor =
@@ -359,7 +349,7 @@ public class Leds extends VirtualSubsystem {
               case L3 -> l3PriorityColor;
               case L4 -> l4PriorityColor;
             };
-    if (blocked == false) {
+    if (!blocked) {
       return primaryColor;
     } else {
       return breathCalculate(
@@ -369,4 +359,6 @@ public class Leds extends VirtualSubsystem {
           breathFastDuration);
     }
   }
+
+  private record Section(int start, int end) {}
 }
