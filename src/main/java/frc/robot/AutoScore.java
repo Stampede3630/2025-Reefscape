@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,7 +17,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.FieldConstants.CoralObjective;
 import frc.robot.FieldConstants.Reef;
-import frc.robot.FieldConstants.ReefLevel;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
@@ -27,12 +28,18 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class AutoScore {
+  public static final LoggedNetworkNumber xOffset =
+      new LoggedNetworkNumber("AutoScore/xOffsetInches", 21);
+  public static final LoggedNetworkNumber yOffset =
+      new LoggedNetworkNumber("AutoScore/yOffsetInches", -3);
   public static final LoggedTunableNumber minDistanceReefClearAlgae =
       new LoggedTunableNumber("AutoScore/MinDistanceReefClearAlgae", Units.inchesToMeters(18.0));
   public static final LoggedTunableNumber minDistanceReefClear =
       new LoggedTunableNumber("AutoScore/MinDistanceReefClear", Units.inchesToMeters(12.0));
+
   // Radius of regular hexagon is side length
   private static final double reefRadius = Reef.faceLength;
   private static final LoggedTunableNumber maxDistanceReefLineup =
@@ -80,8 +87,8 @@ public class AutoScore {
 
   public static Command getAutoDrive(
       Drive drive,
-      Supplier<ReefLevel> reefLevel,
       Supplier<Optional<CoralObjective>> coralObjective,
+      Supplier<FieldConstants.ReefLevel> reefLevel,
       DoubleSupplier driverX,
       DoubleSupplier driverY,
       DoubleSupplier driverOmega) {
@@ -98,12 +105,14 @@ public class AutoScore {
                 .get()
                 .map(
                     objective -> {
-                      if (reefLevel.get() == ReefLevel.L1) {
-                        return getDriveTarget(
-                            robot.get(), AllianceFlipUtil.apply(getL1Pose(objective)));
-                      }
+                      //                      if (reefLevel.get() == FieldConstants.ReefLevel.L1) {
+                      //                        return getDriveTarget(
+                      //                            robot.get(),
+                      // AllianceFlipUtil.apply(getL1Pose(objective)));
+                      //                      }
                       Pose2d goalPose = getCoralScorePose(objective);
                       return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
+                      //                      return AllianceFlipUtil.apply(goalPose);
                     })
                 .orElseGet(() -> RobotState.getInstance().getEstimatedPose()),
         robot,
@@ -134,7 +143,10 @@ public class AutoScore {
 
   /** Get position of robot aligned with branch for selected objective. */
   public static Pose2d getCoralScorePose(CoralObjective coralObjective) {
-    return getBranchPose(coralObjective);
+    return getBranchPose(coralObjective)
+        .transformBy(
+            new Transform2d(Inches.of(xOffset.get()), Inches.of(yOffset.get()), Rotation2d.kZero))
+        .plus(new Transform2d(0, 0, Rotation2d.k180deg));
   }
 
   private static Pose2d getL1Pose(CoralObjective coralObjective) {

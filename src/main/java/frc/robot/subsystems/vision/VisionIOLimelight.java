@@ -165,7 +165,12 @@ public class VisionIOLimelight implements VisionIO {
       if (rf == null) continue;
       txTyObservations.add(
           new RobotState.TxTyObservation(
-              rf.id, cameraPose, rf.txnc, rf.tync, rf.distToCamera, rf.timestamp * 1.0e-6));
+              rf.id,
+              cameraPose,
+              Math.toRadians(rf.txnc),
+              Math.toRadians(rf.tync),
+              rf.distToCamera,
+              rf.timestamp));
     }
 
     // Save tag observations to inputs object

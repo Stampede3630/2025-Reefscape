@@ -15,10 +15,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.NamedCommands;
@@ -30,10 +32,13 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
 import frc.robot.subsystems.vision.*;
+import java.util.Optional;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -45,6 +50,8 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public class RobotContainer {
   private final RobotState robotState = RobotState.getInstance();
+  @AutoLogOutput private int autoScoreBranch = 0;
+  @AutoLogOutput private FieldConstants.ReefLevel autoScoreReefLevel = FieldConstants.ReefLevel.L4;
   // Subsystems
   private final Drive drive;
   private final Vision vision;
@@ -56,8 +63,6 @@ public class RobotContainer {
   private final Elevator elevator;
   private final Manipulator manipulator;
   private final Climber climber;
-  private final LoggedNetworkNumber selectedPosition =
-      new LoggedNetworkNumber("ElevatorReference", 1);
   private final LoggedNetworkNumber outtakeSpeed =
       new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
   private final LoggedNetworkNumber intakeSpeed =
@@ -82,8 +87,7 @@ public class RobotContainer {
         vision =
             new Vision(
                 RobotState.getInstance()::addVisionObservation,
-                new VisionIOLimelight(
-                    VisionConstants.limelightPose, camera0Name, robotState::getRotation));
+                new VisionIOLimelight(limelightPose, camera0Name, robotState::getRotation));
         elevator = new Elevator(new ElevatorIOTalonFX());
         manipulator = new Manipulator(new ManipulatorIOTalonFX());
         climber = new Climber(new ClimberIOTalonFX());
@@ -167,9 +171,8 @@ public class RobotContainer {
 
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+   * instantiating a {@link GenericHID} or one of its subclasses ({@link Joystick} or {@link
+   * XboxController}), and then passing it to a {@link JoystickButton}.
    */
   private void configureButtonBindings() {
     //     Default command, normal field-relative drive
@@ -181,8 +184,23 @@ public class RobotContainer {
             () -> -controller.getRightX()));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(selectedPosition::get));
-    controller.povUp().whileTrue(elevator.upCommand());
+    controller
+        .a()
+        .onTrue(
+            elevator.setPosition(
+                () ->
+                    switch (autoScoreReefLevel) {
+                      case L1 -> 18;
+                      case L2 -> 20;
+                      case L3 -> 36;
+                      case L4 -> 60;
+                    }));
+    controller
+        .povUp()
+        .whileTrue(
+            elevator
+                .upCommand()
+                .andThen(Commands.runOnce(() -> Leds.getInstance().climbing = true)));
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
@@ -194,13 +212,27 @@ public class RobotContainer {
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
-    buttonBoard.axisGreaterThan(0, .90).onTrue(Commands.runOnce(() -> selectedPosition.set(18)));
+    buttonBoard
+        .axisGreaterThan(0, .90)
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L1)); // 18
     // L2
-    buttonBoard.axisLessThan(1, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(20)));
+    buttonBoard
+        .axisLessThan(1, -.9)
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 20
     // L3
-    buttonBoard.axisLessThan(0, -.9).onTrue(Commands.runOnce(() -> selectedPosition.set(36)));
+    buttonBoard
+        .axisLessThan(0, -.9)
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 36
     // L4
-    buttonBoard.axisGreaterThan(1, .9).onTrue(Commands.runOnce(() -> selectedPosition.set(60)));
+    buttonBoard
+        .axisGreaterThan(1, .9)
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 60
+    for (int i = 1; i < 13; i++) {
+      int finalI = i - 1;
+      buttonBoard
+          .button(i)
+          .onTrue(Commands.runOnce(() -> autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8));
+    }
 
     //    // Lock to 0° when A button is held
     //    controller
@@ -229,17 +261,15 @@ public class RobotContainer {
     controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
-    //    controller.rightBumper().whileTrue(DriveCommands.tcOpenLoop(drive, driveTc::get));
-
     controller
         .rightBumper()
         .whileTrue(
             AutoScore.getAutoDrive(
                 drive,
-                () -> FieldConstants.ReefLevel.L4,
                 () ->
-                    java.util.Optional.of(
-                        new FieldConstants.CoralObjective(1, FieldConstants.ReefLevel.L4)),
+                    Optional.of(
+                        new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
+                () -> autoScoreReefLevel,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
