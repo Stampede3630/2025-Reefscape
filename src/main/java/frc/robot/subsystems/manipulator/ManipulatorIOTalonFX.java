@@ -27,7 +27,8 @@ import java.util.List;
 
 public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
   private final TalonFX motor;
-  private final CANrange tof;
+  private final CANrange manipulatorTof;
+  private final CANrange funnelTof;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
   private final StatusSignal<Angle> position;
@@ -37,7 +38,8 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Voltage> voltage;
   private final StatusSignal<Temperature> temp;
-  private final StatusSignal<Distance> tofDistance;
+  private final StatusSignal<Distance> manipulatorTofDistance;
+  private final StatusSignal<Distance> funnelTofDistsance;
 
   private final Debouncer connectedDebouncer = new Debouncer(0.5);
 
@@ -47,7 +49,8 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
 
   public ManipulatorIOTalonFX() {
     motor = new TalonFX(Constants.kManipulatorMotorId, Constants.kManipulatorCanBus);
-    tof = new CANrange(Constants.kCanRangeId, Constants.kManipulatorCanBus);
+    manipulatorTof = new CANrange(Constants.kManipulatorSensorId, Constants.kManipulatorCanBus);
+    funnelTof = new CANrange(Constants.kFunnelSensorId, Constants.kManipulatorCanBus);
     config
         .withMotorOutput(
             new MotorOutputConfigs()
@@ -62,10 +65,12 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     supplyCurrent = motor.getSupplyCurrent();
     voltage = motor.getMotorVoltage();
     temp = motor.getDeviceTemp();
-    tofDistance = tof.getDistance();
+    manipulatorTofDistance = manipulatorTof.getDistance();
+    funnelTofDistsance = funnelTof.getDistance();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(Constants.kImportantUpdateRate, tofDistance);
-    ParentDevice.optimizeBusUtilizationForAll(tof);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        Constants.kImportantUpdateRate, manipulatorTofDistance, funnelTofDistsance);
+    ParentDevice.optimizeBusUtilizationForAll(manipulatorTof);
 
     BaseStatusSignal.setUpdateFrequencyForAll(Constants.kUnimportantUpdateRate, temp);
   }
@@ -79,7 +84,15 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
   public void updateInputs(ManipulatorIOInputs inputs) {
     boolean connected =
         BaseStatusSignal.refreshAll(
-                position, velocity, torqueCurrent, statorCurrent, supplyCurrent, voltage, temp)
+                position,
+                velocity,
+                torqueCurrent,
+                statorCurrent,
+                supplyCurrent,
+                voltage,
+                temp,
+                manipulatorTofDistance,
+                funnelTofDistsance)
             .isOK();
     inputs.connected = connectedDebouncer.calculate(connected);
     inputs.position = position.getValueAsDouble();
@@ -89,7 +102,8 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     inputs.statorCurrent = statorCurrent.getValueAsDouble();
     inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.temp = temp.getValueAsDouble();
-    inputs.tofDistance = tofDistance.getValueAsDouble();
+    inputs.manipulatorTofDistance = manipulatorTofDistance.getValueAsDouble();
+    inputs.funnelTofDistance = funnelTofDistsance.getValueAsDouble();
   }
 
   @Override

@@ -31,6 +31,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.EqualsUtil;
 import frc.robot.util.HasTalonFX;
 import java.util.List;
 import java.util.Queue;
@@ -72,6 +73,7 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
   private final StatusSignal<AngularVelocity> driveVelocity;
   private final StatusSignal<Voltage> driveAppliedVolts;
   private final StatusSignal<Current> driveCurrent;
+  private final StatusSignal<Current> driveTorqueCurrent;
 
   // Inputs from turn motor
   private final StatusSignal<Angle> turnAbsolutePosition;
@@ -158,6 +160,7 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
     driveVelocity = driveTalon.getVelocity();
     driveAppliedVolts = driveTalon.getMotorVoltage();
     driveCurrent = driveTalon.getStatorCurrent();
+    driveTorqueCurrent = driveTalon.getTorqueCurrent();
 
     // Create turn status signals
     turnAbsolutePosition = cancoder.getAbsolutePosition();
@@ -186,7 +189,8 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
   public void updateInputs(ModuleIOInputs inputs) {
     // Refresh all signals
     var driveStatus =
-        BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
+        BaseStatusSignal.refreshAll(
+            drivePosition, driveVelocity, driveAppliedVolts, driveCurrent, driveTorqueCurrent);
     var turnStatus =
         BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
     var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
@@ -197,6 +201,7 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
     inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
     inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
     inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+    inputs.driveTorqueCurrent = driveTorqueCurrent.getValueAsDouble();
 
     // Update turn inputs
     inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
@@ -243,7 +248,13 @@ public class ModuleIOTalonFX implements ModuleIO, HasTalonFX {
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
-          case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
+          case TorqueCurrentFOC -> {
+            if (EqualsUtil.epsilonEquals(velocityRadPerSec, 0)) {
+              yield torqueCurrentRequest.withOutput(0);
+            } else {
+              yield velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
+            }
+          }
         });
   }
 

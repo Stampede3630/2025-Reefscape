@@ -9,6 +9,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.RobotState;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface VisionIO {
@@ -27,6 +28,7 @@ public interface VisionIO {
         new TargetObservation(new Rotation2d(), new Rotation2d());
     public PoseObservation[] poseObservations = new PoseObservation[0];
     public int[] tagIds = new int[0];
+    public RobotState.TxTyObservation[] txTyObservations = new RobotState.TxTyObservation[0];
   }
 
   /** Represents the angle to a simple target, not used for pose estimation. */

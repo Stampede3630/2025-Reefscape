@@ -7,8 +7,10 @@
 
 package frc.robot.subsystems.elevator;
 
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.EqualsUtil;
 import java.util.function.DoubleSupplier;
@@ -35,6 +37,10 @@ public class Elevator extends SubsystemBase {
 
   public Command setPosition(DoubleSupplier position) {
     return runOnce(() -> io.runPosition(position.getAsDouble()));
+  }
+
+  public Command setPositionBlocking(DoubleSupplier position, Time timeout) {
+    return setPosition(position).alongWith(Commands.waitUntil(this::atGoal)).withTimeout(timeout);
   }
 
   public boolean atGoal() {

@@ -5,34 +5,29 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.robot.subsystems.manipulator;
+package frc.robot.subsystems.climber;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface ManipulatorIO {
-  default void runTorqueCurrent(double amps) {}
+public interface ClimberIO {
+  default void updateInputs(ClimberIOInputs inputs) {}
 
-  default void updateInputs(ManipulatorIOInputs inputs) {}
+  default void runVolts(double volts) {}
+
+  default void runTorqueCurrent(double amps) {}
 
   default void stop() {}
 
-  default boolean setCoastMode(boolean enabled) {
-    return true;
-  }
-
-  default void runVelocity(double velocity) {}
-
   @AutoLog
-  class ManipulatorIOInputs {
+  class ClimberIOInputs {
     public boolean connected = false;
     public double position = 0.0;
     public double velocity = 0.0;
+    public double reference = 0.0;
     public double torqueCurrent = 0.0;
     public double voltage = 0.0;
     public double statorCurrent = 0.0;
     public double supplyCurrent = 0.0;
     public double temp = 0.0;
-    public double manipulatorTofDistance = 0.0;
-    public double funnelTofDistance = 0.0;
   }
 }
