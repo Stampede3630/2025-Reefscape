@@ -190,17 +190,7 @@ public class RobotContainer {
             () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
 
     // ELEVATOR
-    controller
-        .a()
-        .onTrue(
-            elevator.setPosition(
-                () ->
-                    switch (autoScoreReefLevel) {
-                      case L1 -> 18;
-                      case L2 -> 20;
-                      case L3 -> 36;
-                      case L4 -> 60;
-                    }));
+    controller.a().onTrue(elevator.setPosition(() -> autoScoreReefLevel.height));
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 

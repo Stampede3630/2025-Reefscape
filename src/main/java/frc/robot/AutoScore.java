@@ -87,33 +87,23 @@ public class AutoScore {
 
   public static Command getAutoDriveBlocking(
       Drive drive,
-      Supplier<Optional<CoralObjective>> coralObjective,
+      Supplier<CoralObjective> coralObjective,
       Supplier<FieldConstants.ReefLevel> reefLevel) {
-    Supplier<Pose2d> robot =
-        () ->
-            coralObjective
-                .get()
-                .map(AutoScore::getRobotPose)
-                .orElseGet(() -> RobotState.getInstance().getEstimatedPose());
+    Supplier<Pose2d> robot = () -> AutoScore.getRobotPose(coralObjective.get());
     DriveToPose driveToPose =
         new DriveToPose(
             drive,
-            () ->
-                coralObjective
-                    .get()
-                    .map(
-                        objective -> {
-                          //                      if (reefLevel.get() ==
-                          // FieldConstants.ReefLevel.L1) {
-                          //                        return getDriveTarget(
-                          //                            robot.get(),
-                          // AllianceFlipUtil.apply(getL1Pose(objective)));
-                          //                      }
-                          Pose2d goalPose = getCoralScorePose(objective);
-                          return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
-                          //                      return AllianceFlipUtil.apply(goalPose);
-                        })
-                    .orElseGet(() -> RobotState.getInstance().getEstimatedPose()),
+            () -> {
+              //                      if (reefLevel.get() ==
+              // FieldConstants.ReefLevel.L1) {
+              //                        return getDriveTarget(
+              //                            robot.get(),
+              // AllianceFlipUtil.apply(getL1Pose(objective)));
+              //                      }
+              Pose2d goalPose = getCoralScorePose(coralObjective.get());
+              return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
+              //                      return AllianceFlipUtil.apply(goalPose);
+            },
             robot);
     return driveToPose.until(driveToPose::atGoal);
   }
