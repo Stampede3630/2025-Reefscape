@@ -85,6 +85,39 @@ public class AutoScore {
 
   private AutoScore() {}
 
+  public static Command getAutoDriveBlocking(
+      Drive drive,
+      Supplier<Optional<CoralObjective>> coralObjective,
+      Supplier<FieldConstants.ReefLevel> reefLevel) {
+    Supplier<Pose2d> robot =
+        () ->
+            coralObjective
+                .get()
+                .map(AutoScore::getRobotPose)
+                .orElseGet(() -> RobotState.getInstance().getEstimatedPose());
+    DriveToPose driveToPose =
+        new DriveToPose(
+            drive,
+            () ->
+                coralObjective
+                    .get()
+                    .map(
+                        objective -> {
+                          //                      if (reefLevel.get() ==
+                          // FieldConstants.ReefLevel.L1) {
+                          //                        return getDriveTarget(
+                          //                            robot.get(),
+                          // AllianceFlipUtil.apply(getL1Pose(objective)));
+                          //                      }
+                          Pose2d goalPose = getCoralScorePose(objective);
+                          return getDriveTarget(robot.get(), AllianceFlipUtil.apply(goalPose));
+                          //                      return AllianceFlipUtil.apply(goalPose);
+                        })
+                    .orElseGet(() -> RobotState.getInstance().getEstimatedPose()),
+            robot);
+    return driveToPose.until(driveToPose::atGoal);
+  }
+
   public static Command getAutoDrive(
       Drive drive,
       Supplier<Optional<CoralObjective>> coralObjective,

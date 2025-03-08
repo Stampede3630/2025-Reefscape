@@ -7,12 +7,14 @@
 
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.util.EqualsUtil;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -30,6 +32,8 @@ public class Elevator extends SubsystemBase {
   private final LoggedNetworkBoolean coastOverride =
       new LoggedNetworkBoolean(KEY + "/CoastOverride");
   @AutoLogOutput private boolean coastModeEnabled = true;
+  private final LoggedTunableNumber intakeHeight =
+      new LoggedTunableNumber("Elevator/intakeHeight", 0.1);
 
   public Elevator(ElevatorIO io) {
     this.io = io;
@@ -40,11 +44,22 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command setPositionBlocking(DoubleSupplier position, Time timeout) {
-    return setPosition(position).alongWith(Commands.waitUntil(this::atGoal)).withTimeout(timeout);
+    return setPosition(position).andThen(Commands.waitUntil(this::atGoal)).withTimeout(timeout);
   }
 
+  public Command setPositionBlocking(DoubleSupplier position, double epsilon, Time timeout) {
+    return setPosition(position)
+        .andThen(Commands.waitUntil(() -> atGoal(epsilon)))
+        .withTimeout(timeout);
+  }
+
+  @AutoLogOutput
   public boolean atGoal() {
-    return EqualsUtil.epsilonEquals(inputs.position, inputs.reference, 0.5);
+    return Math.abs(inputs.position - inputs.reference) <= 0.5;
+  }
+
+  public boolean atGoal(double epsilon) {
+    return Math.abs(inputs.position - inputs.reference) <= epsilon;
   }
 
   private void setCoastMode(boolean enabled) {
@@ -63,6 +78,14 @@ public class Elevator extends SubsystemBase {
 
   public Command seedPosition(DoubleSupplier position) {
     return runOnce(() -> io.seedPosition(position.getAsDouble()));
+  }
+
+  public Command intakeHeight() {
+    return setPosition(intakeHeight);
+  }
+
+  public Command intakeHeightBlocking() {
+    return setPositionBlocking(intakeHeight, Seconds.of(10));
   }
 
   @Override

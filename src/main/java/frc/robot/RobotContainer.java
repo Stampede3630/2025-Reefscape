@@ -7,6 +7,9 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -37,15 +40,10 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
-import java.util.Optional;
-
-import static edu.wpi.first.units.Units.Seconds;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -55,8 +53,9 @@ import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
  */
 public class RobotContainer {
   private final RobotState robotState = RobotState.getInstance();
-  private final SlewRateLimiter linearSlewRateLimiter = new SlewRateLimiter(1);
-  private final SlewRateLimiter angularSlewRateLimiter = new SlewRateLimiter(1);
+  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(10);
+  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(10);
+  private final SlewRateLimiter angularSlewRateLimiter = new SlewRateLimiter(10);
   // Subsystems
   private final Drive drive;
   private final Vision vision;
@@ -186,8 +185,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> linearSlewRateLimiter.calculate(-controller.getLeftY()),
-            () -> linearSlewRateLimiter.calculate(-controller.getLeftX()),
+            () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+            () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
             () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
 
     // ELEVATOR
@@ -207,9 +206,7 @@ public class RobotContainer {
 
     // MANIPULATOR
     controller.rightTrigger().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
-    controller
-        .leftTrigger()
-        .whileTrue(elevator.setPosition(() -> 1).andThen(manipulator.autoIntake()));
+    controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
 
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
@@ -242,19 +239,17 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> linearSlewRateLimiter.calculate(-controller.getLeftY()),
-                () -> linearSlewRateLimiter.calculate(-controller.getLeftX()),
+                () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
                 () -> {
                   if (FieldConstants.CoralStation.leftRegion.inRegion(
                       robotState.getEstimatedPose().getTranslation()))
                     return AllianceFlipUtil.apply(
-                            FieldConstants.CoralStation.leftCenterFace.getRotation())
-                        .rotateBy(Rotation2d.k180deg);
+                        FieldConstants.CoralStation.leftCenterFace.getRotation());
                   else if (FieldConstants.CoralStation.rightRegion.inRegion(
                       robotState.getEstimatedPose().getTranslation()))
                     return AllianceFlipUtil.apply(
-                            FieldConstants.CoralStation.rightCenterFace.getRotation())
-                        .rotateBy(Rotation2d.k180deg);
+                        FieldConstants.CoralStation.rightCenterFace.getRotation());
                   else return robotState.getEstimatedPose().getRotation();
                 }));
 
@@ -284,13 +279,11 @@ public class RobotContainer {
                     Optional.of(
                         new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
                 () -> autoScoreReefLevel,
-                () -> linearSlewRateLimiter.calculate(-controller.getLeftY()),
-                () -> linearSlewRateLimiter.calculate(-controller.getLeftX()),
+                () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
                 () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
-    manipulator
-        .funnelTof()
-        .onTrue(
-            elevator.setPositionBlocking(() -> 0, Seconds.of(2)).andThen(manipulator.autoIntake()));
+
+    // manipulator.funnelTof().onTrue(elevator.intakeHeight().alongWith(manipulator.autoIntake()));
   }
 
   /**

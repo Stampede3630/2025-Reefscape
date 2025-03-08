@@ -32,7 +32,7 @@ public class Polygon {
             - (q.getX() - p.getX()) * (r.getY() - q.getY());
 
     if (Math.abs(val) < 1E-6) // zero check
-      return 0;
+    return 0;
     return (val > 0) ? 1 : 2;
   }
 
