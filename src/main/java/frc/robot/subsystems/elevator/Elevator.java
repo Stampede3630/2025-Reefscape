@@ -34,13 +34,17 @@ public class Elevator extends SubsystemBase {
   @AutoLogOutput private boolean coastModeEnabled = true;
   private final LoggedTunableNumber intakeHeight =
       new LoggedTunableNumber("Elevator/intakeHeight", 0.1);
+  private double setpoint = -1;
 
   public Elevator(ElevatorIO io) {
     this.io = io;
   }
 
   public Command setPosition(DoubleSupplier position) {
-    return runOnce(() -> io.runPosition(position.getAsDouble()));
+    return runOnce(() -> {
+      this.setpoint = position.getAsDouble();
+      io.runPosition(setpoint);
+    });
   }
 
   public Command setPositionBlocking(DoubleSupplier position, Time timeout) {
@@ -55,11 +59,11 @@ public class Elevator extends SubsystemBase {
 
   @AutoLogOutput
   public boolean atGoal() {
-    return Math.abs(inputs.position - inputs.reference) <= 0.5;
+    return Math.abs(inputs.position - setpoint) <= 0.5;
   }
 
   public boolean atGoal(double epsilon) {
-    return Math.abs(inputs.position - inputs.reference) <= epsilon;
+    return Math.abs(inputs.position - setpoint) <= epsilon;
   }
 
   private void setCoastMode(boolean enabled) {
