@@ -39,7 +39,7 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
   private final StatusSignal<Voltage> voltage;
   private final StatusSignal<Temperature> temp;
   private final StatusSignal<Distance> manipulatorTofDistance;
-  private final StatusSignal<Distance> funnelTofDistsance;
+  private final StatusSignal<Distance> funnelTofDistance;
 
   private final Debouncer connectedDebouncer = new Debouncer(0.5);
 
@@ -66,10 +66,10 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     voltage = motor.getMotorVoltage();
     temp = motor.getDeviceTemp();
     manipulatorTofDistance = manipulatorTof.getDistance();
-    funnelTofDistsance = funnelTof.getDistance();
+    funnelTofDistance = funnelTof.getDistance();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Constants.kImportantUpdateRate, manipulatorTofDistance, funnelTofDistsance);
+        Constants.kImportantUpdateRate, manipulatorTofDistance, funnelTofDistance);
     ParentDevice.optimizeBusUtilizationForAll(manipulatorTof);
 
     BaseStatusSignal.setUpdateFrequencyForAll(Constants.kUnimportantUpdateRate, temp);
@@ -92,7 +92,7 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
                 voltage,
                 temp,
                 manipulatorTofDistance,
-                funnelTofDistsance)
+                funnelTofDistance)
             .isOK();
     inputs.connected = connectedDebouncer.calculate(connected);
     inputs.position = position.getValueAsDouble();
@@ -103,7 +103,15 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     inputs.supplyCurrent = supplyCurrent.getValueAsDouble();
     inputs.temp = temp.getValueAsDouble();
     inputs.manipulatorTofDistance = manipulatorTofDistance.getValueAsDouble();
-    inputs.funnelTofDistance = funnelTofDistsance.getValueAsDouble();
+    inputs.funnelTofDistance = funnelTofDistance.getValueAsDouble();
+  }
+
+  public double getManipulatorTofDistance() {
+    return manipulatorTofDistance.refresh().getValueAsDouble();
+  }
+
+  public double getFunnelTofDistance() {
+    return funnelTofDistance.refresh().getValueAsDouble();
   }
 
   @Override

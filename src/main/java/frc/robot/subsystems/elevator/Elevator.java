@@ -41,10 +41,11 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command setPosition(DoubleSupplier position) {
-    return runOnce(() -> {
-      this.setpoint = position.getAsDouble();
-      io.runPosition(setpoint);
-    });
+    return runOnce(
+        () -> {
+          this.setpoint = position.getAsDouble();
+          io.runPosition(setpoint);
+        });
   }
 
   public Command setPositionBlocking(DoubleSupplier position, Time timeout) {
