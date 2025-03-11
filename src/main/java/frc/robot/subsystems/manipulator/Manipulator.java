@@ -63,13 +63,21 @@ public class Manipulator extends SubsystemBase {
   }
 
   public Trigger funnelTof() {
-    return new Trigger(() -> inputs.funnelTofDistance < 0.1).debounce(0.05);
+    return new Trigger(() -> io.getFunnelTofDistance() < 0.1).debounce(0.05);
+  }
+
+  public Trigger manipulatorTof() {
+    return new Trigger(() -> io.getManipulatorTofDistance() < 0.1).debounce(0.05);
   }
 
   public Command autoIntake() {
     Debouncer debouncer = new Debouncer(0.1);
     return runVelocity(() -> 10)
-        .until(() -> debouncer.calculate(inputs.manipulatorTofDistance < 0.1))
+        .until(() -> debouncer.calculate(io.getManipulatorTofDistance() < 0.1))
         .withTimeout(Seconds.of(5));
+  }
+
+  public Trigger haveAGamePiece() {
+    return funnelTof().or(manipulatorTof());
   }
 }

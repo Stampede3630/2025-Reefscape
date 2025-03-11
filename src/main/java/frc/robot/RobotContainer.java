@@ -223,26 +223,6 @@ public class RobotContainer {
           .onTrue(Commands.runOnce(() -> autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8));
     }
 
-    // lock to coral station
-    controller
-        .leftStick()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
-                () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
-                () -> {
-                  if (FieldConstants.CoralStation.leftRegion.inRegion(
-                      robotState.getEstimatedPose().getTranslation()))
-                    return AllianceFlipUtil.apply(
-                        FieldConstants.CoralStation.leftCenterFace.getRotation());
-                  else if (FieldConstants.CoralStation.rightRegion.inRegion(
-                      robotState.getEstimatedPose().getTranslation()))
-                    return AllianceFlipUtil.apply(
-                        FieldConstants.CoralStation.rightCenterFace.getRotation());
-                  else return robotState.getEstimatedPose().getRotation();
-                }));
-
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -263,15 +243,33 @@ public class RobotContainer {
     controller
         .rightBumper()
         .whileTrue(
-            AutoScore.getAutoDrive(
-                drive,
-                () ->
-                    Optional.of(
-                        new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
-                () -> autoScoreReefLevel,
-                () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
-                () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
-                () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
+            Commands.either(
+                AutoScore.getAutoDrive( // if have a game piece, auto align
+                    drive,
+                    () ->
+                        Optional.of(
+                            new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
+                    () -> autoScoreReefLevel,
+                    () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                    () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
+                    () -> angularSlewRateLimiter.calculate(-controller.getRightX())),
+                DriveCommands
+                    .joystickDriveAtAngle( // if don't have a game piece, lock to coral station
+                        drive,
+                        () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                        () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
+                        () -> {
+                          if (FieldConstants.CoralStation.leftRegion.inRegion(
+                              robotState.getEstimatedPose().getTranslation()))
+                            return AllianceFlipUtil.apply(
+                                FieldConstants.CoralStation.leftCenterFace.getRotation());
+                          else if (FieldConstants.CoralStation.rightRegion.inRegion(
+                              robotState.getEstimatedPose().getTranslation()))
+                            return AllianceFlipUtil.apply(
+                                FieldConstants.CoralStation.rightCenterFace.getRotation());
+                          else return robotState.getEstimatedPose().getRotation();
+                        }),
+                manipulator.haveAGamePiece()));
 
     // manipulator.funnelTof().onTrue(elevator.intakeHeight().alongWith(manipulator.autoIntake()));
   }
