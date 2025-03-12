@@ -13,7 +13,7 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral7L4"
+            "name": "scoreCoralGL4"
           }
         },
         {
@@ -35,15 +35,9 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "LAlgae to A"
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "scoreCoral1L4"
+            "name": "scoreCoralAL4"
           }
         }
       ]

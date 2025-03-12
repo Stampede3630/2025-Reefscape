@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.073384174202122,
-        "y": 5.2727594380642975
+        "x": 5.31375,
+        "y": 6.247999999999999
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.05049999999725,
-        "y": 5.312000000001517
+        "x": 3.4417500000000003,
+        "y": 5.9945
       },
       "prevControl": {
-        "x": 6.237406817948875,
-        "y": 5.145790088794895
+        "x": 4.65075,
+        "y": 6.9110000000000005
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -120.59600946706283
+    "velocity": 1.5,
+    "rotation": -58.2405199151872
   },
   "reversed": false,
   "folder": "CagePosition3 to Reef",

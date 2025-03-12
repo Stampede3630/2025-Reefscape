@@ -7,55 +7,73 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CagePosition2 to I"
+            "pathName": "CagePosition7 to I"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoralIL4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "I to LSource"
+            "pathName": "I to Left"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LSource to K"
+            "pathName": "Left to LSource"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "intakeCoral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "K to LSource"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LSource to L"
+            "pathName": "LSource to KL"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoralLL4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L to LSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LSource to KL"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralKL4"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "P3 auto1 left side",
+  "folder": null,
   "choreoAuto": false
 }

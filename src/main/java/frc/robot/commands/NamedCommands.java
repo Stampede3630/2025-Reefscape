@@ -36,10 +36,26 @@ public class NamedCommands {
     this.elevator = elevator;
     this.manipulator = manipulator;
     this.vision = vision;
-    for (int i = 0; i < 12; i++) {
+    /*  for (int i = 0; i < 12; i++) {
+        commands.put(
+            "scoreCoral" + i + "L4",
+            getAutoScore(new FieldConstants.CoralObjective(i, FieldConstants.ReefLevel.L4)));
+      }
+      commands.put("intakeCoral", elevator.intakeHeight().andThen(manipulator.autoIntake()));
+
+      com.pathplanner.lib.auto.NamedCommands.registerCommands(commands);
+    }
+    */
+    // Commands with ascii values! :)
+    for (int i = 65; i <= 76; i++) {
+      int coralPlacement = 14 - (i / 65 + i % 65);
+      if (coralPlacement > 11) {
+        coralPlacement -= 12;
+      }
       commands.put(
-          "scoreCoral" + i + "L4",
-          getAutoScore(new FieldConstants.CoralObjective(i, FieldConstants.ReefLevel.L4)));
+          "scoreCoral" + (char) i + "L4",
+          getAutoScore(
+              new FieldConstants.CoralObjective(coralPlacement, FieldConstants.ReefLevel.L4)));
     }
     commands.put("intakeCoral", elevator.intakeHeight().andThen(manipulator.autoIntake()));
 
