@@ -35,4 +35,12 @@ public interface ManipulatorIO {
     public double manipulatorTofDistance = 0.0;
     public double funnelTofDistance = 0.0;
   }
+
+  default double getManipulatorTofDistance() {
+    return 0.0;
+  }
+
+  default double getFunnelTofDistance() {
+    return 0.0;
+  }
 }

@@ -13,11 +13,13 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.util.Region2D;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Contains various field dimensions and useful reference points. All units are in meters and poses
@@ -34,12 +36,16 @@ public class FieldConstants {
   public static final double aprilTagWidth = Units.inchesToMeters(6.50);
   public static final int aprilTagCount = 22;
   public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.NO_BARGE;
+  public static final Region2D topHalf = new Region2D(0, fieldWidth / 2.0, fieldLength, fieldWidth);
+  public static final Region2D bottomHalf = new Region2D(0, 0, fieldLength, fieldWidth / 2.0);
+  private static final Translation2d center =
+      new Translation2d(fieldLength / 2.0, fieldWidth / 2.0);
 
   public enum ReefLevel {
-    L1(Units.inchesToMeters(25.0), 0),
-    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L4(Units.inchesToMeters(72), -90);
+    L1(18, 0),
+    L2(20, -35),
+    L3(36, -35),
+    L4(60, -90);
 
     public final double height;
     public final double pitch;
@@ -138,6 +144,23 @@ public class FieldConstants {
     public static final double shallowHeight = Units.inchesToMeters(30.125);
   }
 
+  /**
+   * Positions of the cages from top of field to bottom of field. Not checked for accuracy yet.
+   */
+  public static class CagePositions {
+    // TODO: Take these with a LARGE grain of salt if using them, double check first pls!!!!
+    private static final Translation2d cageOffset = new Translation2d(-1.657, 0.0);
+    public static final Translation2d cage1 = Barge.farCage.plus(cageOffset);
+    public static final Translation2d cage2 = Barge.middleCage.plus(cageOffset);
+    public static final Translation2d cage3 = Barge.closeCage.plus(cageOffset);
+    public static final Translation2d cage4 =
+        Barge.closeCage.rotateAround(center, Rotation2d.k180deg).plus(cageOffset);
+    public static final Translation2d cage5 =
+        Barge.middleCage.rotateAround(center, Rotation2d.k180deg).plus(cageOffset);
+    public static final Translation2d cage6 =
+        Barge.farCage.rotateAround(center, Rotation2d.k180deg).plus(cageOffset);
+  }
+
   public static class CoralStation {
     public static final double stationLength = Units.inchesToMeters(79.750);
     public static final Pose2d rightCenterFace =
@@ -150,6 +173,8 @@ public class FieldConstants {
             rightCenterFace.getX(),
             fieldWidth - rightCenterFace.getY(),
             Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
+    public static final Region2D leftRegion = new Region2D(0, fieldWidth, 5, fieldWidth - 3);
+    public static final Region2D rightRegion = new Region2D(0, 0, 5, 3);
   }
 
   public static class Reef {
@@ -228,6 +253,7 @@ public class FieldConstants {
     }
   }
 
+  /** Class the describes the positions of the three pre-staged algae + coral "ice creams" */
   public static class StagingPositions {
     // Measured from the center of the ice cream
     public static final double separation = Units.inchesToMeters(72.0);
