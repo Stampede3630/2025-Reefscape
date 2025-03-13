@@ -217,7 +217,7 @@ public class Leds extends VirtualSubsystem {
 
       // Auto scoring
       if (autoScoring) {
-        rainbow(fullSection, rainbowCycleLength, rainbowDuration);
+        solid(fullSection, Color.kMediumAquamarine);
       }
 
       // Climbing alert

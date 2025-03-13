@@ -219,7 +219,7 @@ public class RobotContainer {
                 () -> {
                   autoScoreReefLevel = FieldConstants.ReefLevel.L2;
                   Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L2);
-                })); // 20
+                })); // 18
     // L3
     buttonBoard
         .axisLessThan(0, -.9)
@@ -228,7 +228,7 @@ public class RobotContainer {
                 () -> {
                   autoScoreReefLevel = FieldConstants.ReefLevel.L3;
                   Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
-                })); // 36
+                })); // 34
     // L4
     buttonBoard
         .axisGreaterThan(1, .9)
