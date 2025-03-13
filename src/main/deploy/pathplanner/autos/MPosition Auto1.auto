@@ -13,7 +13,7 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoralGL4"
           }
         },
         {
@@ -37,7 +37,7 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreCoral"
+            "name": "scoreCoralAL4"
           }
         }
       ]

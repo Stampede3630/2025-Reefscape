@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.814739369615701,
-        "y": 1.9743875560048076
+        "x": 2.91525,
+        "y": 0.8269999999999993
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.6855,
-        "y": 2.9524999999999992
+        "x": 5.6745,
+        "y": 1.8702499999999997
       },
       "prevControl": {
-        "x": 3.0924596102836532,
-        "y": 2.300155273081355
+        "x": 5.424803360421939,
+        "y": 1.706733948860988
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 59.98163257239099
+    "velocity": 1.5,
+    "rotation": 120.579226872489
   },
   "reversed": false,
   "folder": "RSource to Reef",

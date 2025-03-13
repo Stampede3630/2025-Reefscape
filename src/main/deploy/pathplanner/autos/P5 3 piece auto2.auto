@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CagePosition5 to EF"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralFL4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "F to RSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RSource to CD"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralDL4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D to RSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RSource to CD"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralCL4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "P3 auto1 left side",
+  "choreoAuto": false
+}
