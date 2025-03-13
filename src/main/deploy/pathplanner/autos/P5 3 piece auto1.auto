@@ -67,7 +67,7 @@
       ]
     }
   },
-  "resetOdom": true,
+  "resetOdom": false,
   "folder": "3Piece auto1",
   "choreoAuto": false
 }

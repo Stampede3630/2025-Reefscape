@@ -237,7 +237,7 @@ public class RobotContainer {
                 () -> {
                   autoScoreReefLevel = FieldConstants.ReefLevel.L4;
                   Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
-                })); // 60
+                })); // 58
     for (int i = 1; i < 13; i++) {
       int finalI = i - 1;
       buttonBoard

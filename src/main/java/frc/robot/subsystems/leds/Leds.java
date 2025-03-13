@@ -69,7 +69,7 @@ public class Leds extends VirtualSubsystem {
   public Color hexColor = Color.kBlack;
   public Color secondaryHexColor = Color.kBlack;
   private Optional<Alliance> alliance = Optional.empty();
-  private Color disabledColor = Color.kGold;
+  private Color disabledColor = Color.kYellow;
   private Color secondaryDisabledColor = Color.kDarkBlue;
   private boolean lastEnabledAuto = false;
   private double lastEnabledTime = 0.0;
