@@ -7,9 +7,6 @@
 
 package frc.robot;
 
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -41,10 +38,14 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
-import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import java.util.Optional;
+
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -77,6 +78,10 @@ public class RobotContainer {
       new LoggedNetworkNumber("Climber/torqueCurrent", 10);
   private final LoggedNetworkNumber driveTc =
       new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
+  private final LoggedNetworkNumber l1Offset = new LoggedNetworkNumber("ElevatorOffsets/L1", 0);
+  private final LoggedNetworkNumber l2Offset = new LoggedNetworkNumber("ElevatorOffsets/L2", 0);
+  private final LoggedNetworkNumber l3Offset = new LoggedNetworkNumber("ElevatorOffsets/L3", 0);
+  private final LoggedNetworkNumber l4Offset = new LoggedNetworkNumber("ElevatorOffsets/L4", 0);
   @AutoLogOutput private int autoScoreBranch = 0;
   @AutoLogOutput private FieldConstants.ReefLevel autoScoreReefLevel = FieldConstants.ReefLevel.L4;
 
@@ -192,7 +197,20 @@ public class RobotContainer {
             () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(() -> autoScoreReefLevel.height).andThen());
+    controller
+        .a()
+        .onTrue(
+            elevator
+                .setPosition(
+                    () ->
+                        switch (autoScoreReefLevel) {
+                              case L1 -> l1Offset.get();
+                              case L2 -> l2Offset.get();
+                              case L3 -> l3Offset.get();
+                              case L4 -> l4Offset.get();
+                            }
+                            + autoScoreReefLevel.height)
+                .andThen());
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 
@@ -205,44 +223,30 @@ public class RobotContainer {
     // L1
     buttonBoard
         .axisGreaterThan(0, .90)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  autoScoreReefLevel = FieldConstants.ReefLevel.L1;
-                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L1);
-                })); // 18
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L1)); // 18
     // L2
     buttonBoard
         .axisLessThan(1, -.9)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  autoScoreReefLevel = FieldConstants.ReefLevel.L2;
-                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L2);
-                })); // 18
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 18
     // L3
     buttonBoard
         .axisLessThan(0, -.9)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  autoScoreReefLevel = FieldConstants.ReefLevel.L3;
-                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
-                })); // 34
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 34
     // L4
     buttonBoard
         .axisGreaterThan(1, .9)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  autoScoreReefLevel = FieldConstants.ReefLevel.L4;
-                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
-                })); // 58
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 58
+
     for (int i = 1; i < 13; i++) {
       int finalI = i - 1;
       buttonBoard
           .button(i)
-          .onTrue(Commands.runOnce(() -> autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8));
+          .onTrue(
+              Commands.runOnce(
+                  () -> {
+                    autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
+                    Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
+                  }));
     }
 
     // Switch to X pattern when X button is pressed
