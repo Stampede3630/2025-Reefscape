@@ -204,7 +204,7 @@ public class Leds extends VirtualSubsystem {
 
       // Auto scoring reef
       if (autoScoringReef) {
-        rainbow(topThreeQuartSection, rainbowCycleLength, rainbowDuration);
+        solid(fullSection, Color.kAqua);
         solid(
             bottomQuartSection,
             switch (autoScoringLevel) {

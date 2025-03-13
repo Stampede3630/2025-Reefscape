@@ -54,6 +54,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public class RobotContainer {
   private final RobotState robotState = RobotState.getInstance();
+  private final Leds leds = Leds.getInstance();
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(10);
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(10);
   private final SlewRateLimiter angularSlewRateLimiter = new SlewRateLimiter(10);
