@@ -32,6 +32,7 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
@@ -190,32 +191,52 @@ public class RobotContainer {
             () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(() -> autoScoreReefLevel.height));
+    controller.a().onTrue(elevator.setPosition(() -> autoScoreReefLevel.height).andThen());
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
     controller.rightTrigger().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
     controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
-
+    // Todo: this is where we add LEDs
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
     buttonBoard
         .axisGreaterThan(0, .90)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L1)); // 18
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L1;
+                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L1);
+                })); // 18
     // L2
     buttonBoard
         .axisLessThan(1, -.9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 20
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L2;
+                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L2);
+                })); // 20
     // L3
     buttonBoard
         .axisLessThan(0, -.9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 36
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L3;
+                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
+                })); // 36
     // L4
     buttonBoard
         .axisGreaterThan(1, .9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 60
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L4;
+                  Leds.getInstance().autoScoringLevel.equals(FieldConstants.ReefLevel.L3);
+                })); // 60
     for (int i = 1; i < 13; i++) {
       int finalI = i - 1;
       buttonBoard
@@ -245,14 +266,17 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 AutoScore.getAutoDrive( // if have a game piece, auto align
-                    drive,
-                    () ->
-                        Optional.of(
-                            new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
-                    () -> autoScoreReefLevel,
-                    () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
-                    () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
-                    () -> angularSlewRateLimiter.calculate(-controller.getRightX())),
+                        drive,
+                        () ->
+                            Optional.of(
+                                new FieldConstants.CoralObjective(
+                                    autoScoreBranch, autoScoreReefLevel)),
+                        () -> autoScoreReefLevel,
+                        () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                        () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
+                        () -> angularSlewRateLimiter.calculate(-controller.getRightX()))
+                    .alongWith(Commands.runOnce(() -> Leds.getInstance().autoScoring = true))
+                    .andThen(Commands.runOnce(() -> Leds.getInstance().autoScoring = false)),
                 DriveCommands
                     .joystickDriveAtAngle( // if don't have a game piece, lock to coral station
                         drive,

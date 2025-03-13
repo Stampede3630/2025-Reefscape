@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CagePosition3 to IJ"
+            "pathName": "CagePosition5 to EF"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoralIL4"
+            "name": "scoreCoralFL4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "I to LSource"
+            "pathName": "F to RSource"
           }
         },
         {
@@ -31,19 +31,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LSource to KL"
+            "pathName": "RSource to CD"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoralKL4"
+            "name": "scoreCoralDL4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "K to LSource"
+            "pathName": "D to RSource"
           }
         },
         {
@@ -55,19 +55,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LSource to KL"
+            "pathName": "RSource to CD"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoralLL4"
+            "name": "scoreCoralCL4"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "P3 auto1 left side",
+  "resetOdom": true,
+  "folder": "3Piece auto1",
   "choreoAuto": false
 }
