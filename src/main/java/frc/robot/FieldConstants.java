@@ -14,12 +14,11 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.util.Region2D;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Contains various field dimensions and useful reference points. All units are in meters and poses
@@ -144,9 +143,7 @@ public class FieldConstants {
     public static final double shallowHeight = Units.inchesToMeters(30.125);
   }
 
-  /**
-   * Positions of the cages from top of field to bottom of field. Not checked for accuracy yet.
-   */
+  /** Positions of the cages from top of field to bottom of field. Not checked for accuracy yet. */
   public static class CagePositions {
     // TODO: Take these with a LARGE grain of salt if using them, double check first pls!!!!
     private static final Translation2d cageOffset = new Translation2d(-1.657, 0.0);

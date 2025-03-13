@@ -19,7 +19,7 @@ import java.util.Optional;
 
 public class Leds extends VirtualSubsystem {
   // Constants
-  private static final boolean prideLeds = true;
+  private static final boolean prideLeds = false;
   private static final int minLoopCycleCount = 10;
   private static final int length = 300;
   private static final Section fullSection = new Section(0, length);
@@ -144,10 +144,7 @@ public class Leds extends VirtualSubsystem {
     if (estopped) {
       solid(fullSection, Color.kRed);
     } else if (DriverStation.isDisabled()) {
-      if (superstructureCoast) {
-        // Elevator coast alert
-        solid(fullSection, Color.kWhite);
-      } else if (lastEnabledAuto && Timer.getTimestamp() - lastEnabledTime < autoFadeMaxTime) {
+      /* if (lastEnabledAuto && Timer.getTimestamp() - lastEnabledTime < autoFadeMaxTime) {
         // Auto fade
         wave(
             new Section(
@@ -157,9 +154,9 @@ public class Leds extends VirtualSubsystem {
             Color.kDarkBlue,
             waveFastCycleLength,
             waveFastDuration);
-      } else if (lowBatteryAlert) {
+      } */ if (lowBatteryAlert) {
         // Low battery
-        strobe(fullSection, Color.kOrangeRed, Color.kBlack, strobeDuration);
+        solid(fullSection, Color.kBlack);
       } else if (prideLeds) {
         // Pride stripes
         stripes(
@@ -199,7 +196,7 @@ public class Leds extends VirtualSubsystem {
       if (characterizationMode) {
         strobe(fullSection, Color.kGold, Color.kBlack, 0.5);
       } else {
-        wave(fullSection, Color.kGold, Color.kDarkBlue, waveFastCycleLength, waveFastDuration);
+        solid(fullSection, Color.kAqua);
       }
     } else {
       solid(topSection, hexColor);
