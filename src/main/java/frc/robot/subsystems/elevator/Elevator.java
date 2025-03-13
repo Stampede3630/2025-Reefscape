@@ -99,10 +99,9 @@ public class Elevator extends SubsystemBase {
     Logger.processInputs(KEY, inputs);
     leaderDisconnectedAlert.set(!inputs.leaderConnected);
     followerDisconnectedAlert.set(!inputs.followerConnected);
-    if(inputs.leaderTorqueCurrent <-15 && inputs.velocity == 0){
-      seedPosition(()->inputs.reference);
+    if (inputs.leaderTorqueCurrent < -15 && inputs.velocity == 0) {
+      seedPosition(() -> inputs.reference);
     }
-  
 
     setCoastMode(coastOverride.get());
   }
