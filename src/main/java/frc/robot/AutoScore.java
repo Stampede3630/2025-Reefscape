@@ -34,7 +34,7 @@ public class AutoScore {
   public static final LoggedNetworkNumber xOffset =
       new LoggedNetworkNumber("AutoScore/xOffsetInches", 21);
   public static final LoggedNetworkNumber yOffset =
-      new LoggedNetworkNumber("AutoScore/yOffsetInches", -10);
+      new LoggedNetworkNumber("AutoScore/yOffsetInches", -9);
   public static final LoggedTunableNumber minDistanceReefClearAlgae =
       new LoggedTunableNumber("AutoScore/MinDistanceReefClearAlgae", Units.inchesToMeters(18.0));
   public static final LoggedTunableNumber minDistanceReefClear =

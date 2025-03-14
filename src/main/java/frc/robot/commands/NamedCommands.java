@@ -10,6 +10,7 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.AutoScore;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.climber.Climber;
@@ -62,14 +63,25 @@ public class NamedCommands {
     com.pathplanner.lib.auto.NamedCommands.registerCommands(commands);
   }
 
+  // private Command getAutoScore(FieldConstants.CoralObjective objective) {
+  //   DoubleSupplier elevHeight = () -> objective.reefLevel().height;
+  //   return elevator
+  //       .setPosition(elevHeight)
+  //       .alongWith(
+  //           AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()))
+  //       .andThen(elevator.setPositionBlocking(elevHeight, Seconds.of(10000)))
+  //       .andThen(manipulator.outtake(() -> 10))
+  //       .andThen(elevator.intakeHeightBlocking());
+  // }
+
   private Command getAutoScore(FieldConstants.CoralObjective objective) {
     DoubleSupplier elevHeight = () -> objective.reefLevel().height;
-    return elevator
-        .setPosition(elevHeight)
-        .alongWith(
-            AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()))
-        .andThen(elevator.setPositionBlocking(elevHeight, Seconds.of(10000)))
-        .andThen(manipulator.outtake(() -> 10))
-        .andThen(elevator.intakeHeightBlocking());
+    return Commands.sequence(
+        AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()),
+        Commands.parallel(
+            elevator.setPositionBlocking(elevHeight, Seconds.of(10000)),
+            AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())),
+        manipulator.outtake(() -> 10),
+        elevator.intakeHeightBlocking());
   }
 }
