@@ -9,7 +9,8 @@ package frc.robot.subsystems.climber;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.*;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -83,6 +84,7 @@ public class ClimberIOTalonFX implements ClimberIO {
                 temp)
             .isOK();
 
+    inputs.connected = connectedDebouncer.calculate(connected);
     inputs.position = position.getValueAsDouble();
     inputs.velocity = velocity.getValueAsDouble();
     inputs.reference = reference.getValueAsDouble();
