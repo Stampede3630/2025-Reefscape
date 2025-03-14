@@ -110,7 +110,7 @@ public class VisionIOLimelight implements VisionIO {
               PoseObservationType.MEGATAG_1));
     }
 
-    // Read new pose observations from MT1
+    // Read new pose observations from MT2
     LimelightHelpers.PoseEstimate[] mt2 =
         LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
     for (LimelightHelpers.PoseEstimate pe : mt2) {
@@ -134,7 +134,7 @@ public class VisionIOLimelight implements VisionIO {
               pe.avgTagDist,
 
               // Observation type
-              PoseObservationType.MEGATAG_1));
+              PoseObservationType.MEGATAG_2));
     }
 
     // Save pose observations to inputs object
