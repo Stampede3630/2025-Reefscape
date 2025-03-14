@@ -299,7 +299,7 @@ public class RobotContainer {
                         }),
                 manipulator.haveAGamePiece()));
 
-    manipulator.funnelTof().onTrue(elevator.intakeHeight().alongWith(manipulator.autoIntake()));
+    manipulator.funnelTof().onTrue(manipulator.autoIntake());
   }
 
   /**
