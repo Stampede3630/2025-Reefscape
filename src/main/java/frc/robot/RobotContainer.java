@@ -74,7 +74,7 @@ public class RobotContainer {
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
-      new LoggedNetworkNumber("Climber/torqueCurrent", 10);
+      new LoggedNetworkNumber("Climber/torqueCurrent", 300);
   private final LoggedNetworkNumber driveTc =
       new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
   private final LoggedNetworkNumber l1Offset = new LoggedNetworkNumber("ElevatorOffsets/L1", 0);
