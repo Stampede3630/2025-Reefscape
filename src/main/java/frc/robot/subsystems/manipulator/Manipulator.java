@@ -63,11 +63,11 @@ public class Manipulator extends SubsystemBase {
   }
 
   public Trigger funnelTof() {
-    return new Trigger(() -> io.getFunnelTofDistance() < 0.1).debounce(0.05);
+    return new Trigger(() -> io.getFunnelTofDistance() < 0.1).debounce(0.1);
   }
 
   public Trigger manipulatorTof() {
-    return new Trigger(() -> io.getManipulatorTofDistance() < 0.1).debounce(0.05);
+    return new Trigger(() -> io.getManipulatorTofDistance() < 0.1).debounce(0.1);
   }
 
   // TODO: Check distance of .1 is appropriate? seems way too low maybe 1

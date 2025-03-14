@@ -59,7 +59,7 @@ public class NamedCommands {
               new FieldConstants.CoralObjective(coralPlacement, FieldConstants.ReefLevel.L4)));
     }
     commands.put("intakeCoral", manipulator.autoIntake());
-
+    commands.put("waitToGetCoral", Commands.waitUntil(manipulator.manipulatorTof()));
     com.pathplanner.lib.auto.NamedCommands.registerCommands(commands);
   }
 
