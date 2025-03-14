@@ -58,7 +58,7 @@ public class NamedCommands {
           getAutoScore(
               new FieldConstants.CoralObjective(coralPlacement, FieldConstants.ReefLevel.L4)));
     }
-    commands.put("intakeCoral", elevator.intakeHeight().andThen(manipulator.autoIntake()));
+    commands.put("intakeCoral", manipulator.autoIntake());
 
     com.pathplanner.lib.auto.NamedCommands.registerCommands(commands);
   }
