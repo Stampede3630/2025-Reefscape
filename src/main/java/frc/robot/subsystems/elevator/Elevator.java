@@ -85,7 +85,8 @@ public class Elevator extends SubsystemBase {
     return runOnce(() -> io.seedPosition(position.getAsDouble()));
   }
 
-  //TODO: FIX BUG IN ELEVATOR LOGIC that depends n CAN RANGE bringing elevator down for intake height
+  // TODO: FIX BUG IN ELEVATOR LOGIC that depends n CAN RANGE bringing elevator down for intake
+  // height
   public Command intakeHeight() {
     return setPosition(intakeHeight);
   }
