@@ -81,6 +81,7 @@ public class NamedCommands {
         Commands.parallel(
             elevator.setPositionBlocking(elevHeight, Seconds.of(10000)),
             AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())),
+        Commands.waitSeconds(0.3),
         manipulator.outtake(() -> 10),
         elevator.intakeHeightBlocking());
   }
