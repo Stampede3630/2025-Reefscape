@@ -298,7 +298,7 @@ public class RobotContainer {
                           else return robotState.getEstimatedPose().getRotation();
                         }),
                 manipulator.haveAGamePiece()));
-                manipulator.funnelTof().onTrue(manipulator.autoIntake());
+    manipulator.funnelTof().onTrue(manipulator.autoIntake());
   }
 
   /**
@@ -309,8 +309,8 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // return AutoBuilder.buildAuto("P5 first part").andThen(AutoBuilder.buildAuto("P5 second
     // part"));
-    //return AutoBuilder.buildAuto("P2 first part").andThen(AutoBuilder.buildAuto("P2 second part"));
+    // return AutoBuilder.buildAuto("P2 first part").andThen(AutoBuilder.buildAuto("P2 second
+    // part"));
     return autoChooser.get().withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
-
   }
 }
