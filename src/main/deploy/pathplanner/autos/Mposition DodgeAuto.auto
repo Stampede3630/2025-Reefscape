@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CagePosition2 to IJ"
+            "pathName": "CagePosition7 to I"
           }
         },
         {
@@ -19,31 +19,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "I to LSource"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeCoral"
+            "pathName": "I to Left"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LSource to KL"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "scoreCoralKL4"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "K to LSource"
+            "pathName": "Left to LSource"
           }
         },
         {
@@ -63,11 +45,35 @@
           "data": {
             "name": "scoreCoralLL4"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L to LSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LSource to KL"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralKL4"
+          }
         }
       ]
     }
   },
   "resetOdom": false,
-  "folder": "3Piece auto1",
+  "folder": null,
   "choreoAuto": false
 }

@@ -32,6 +32,7 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
@@ -53,6 +54,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public class RobotContainer {
   private final RobotState robotState = RobotState.getInstance();
+  private final Leds leds = Leds.getInstance();
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(10);
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(10);
   private final SlewRateLimiter angularSlewRateLimiter = new SlewRateLimiter(10);
@@ -72,9 +74,13 @@ public class RobotContainer {
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
-      new LoggedNetworkNumber("Climber/torqueCurrent", 10);
+      new LoggedNetworkNumber("Climber/torqueCurrent", 300);
   private final LoggedNetworkNumber driveTc =
       new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
+  private final LoggedNetworkNumber l1Offset = new LoggedNetworkNumber("ElevatorOffsets/L1", 0);
+  private final LoggedNetworkNumber l2Offset = new LoggedNetworkNumber("ElevatorOffsets/L2", 0);
+  private final LoggedNetworkNumber l3Offset = new LoggedNetworkNumber("ElevatorOffsets/L3", 0);
+  private final LoggedNetworkNumber l4Offset = new LoggedNetworkNumber("ElevatorOffsets/L4", 0);
   @AutoLogOutput private int autoScoreBranch = 0;
   @AutoLogOutput private FieldConstants.ReefLevel autoScoreReefLevel = FieldConstants.ReefLevel.L4;
 
@@ -190,14 +196,27 @@ public class RobotContainer {
             () -> angularSlewRateLimiter.calculate(-controller.getRightX())));
 
     // ELEVATOR
-    controller.a().onTrue(elevator.setPosition(() -> autoScoreReefLevel.height));
+    controller
+        .a()
+        .onTrue(
+            elevator
+                .setPosition(
+                    () ->
+                        switch (autoScoreReefLevel) {
+                              case L1 -> l1Offset.get();
+                              case L2 -> l2Offset.get();
+                              case L3 -> l3Offset.get();
+                              case L4 -> l4Offset.get();
+                            }
+                            + autoScoreReefLevel.height)
+                .andThen());
     controller.povUp().whileTrue(elevator.upCommand());
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
     controller.rightTrigger().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
     controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
-
+    // Todo: this is where we add LEDs
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
@@ -207,20 +226,26 @@ public class RobotContainer {
     // L2
     buttonBoard
         .axisLessThan(1, -.9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 20
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 18
     // L3
     buttonBoard
         .axisLessThan(0, -.9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 36
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 34
     // L4
     buttonBoard
         .axisGreaterThan(1, .9)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 60
+        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 58
+
     for (int i = 1; i < 13; i++) {
       int finalI = i - 1;
       buttonBoard
           .button(i)
-          .onTrue(Commands.runOnce(() -> autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8));
+          .onTrue(
+              Commands.runOnce(
+                  () -> {
+                    autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
+                    Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
+                  }));
     }
 
     // Switch to X pattern when X button is pressed
@@ -245,14 +270,17 @@ public class RobotContainer {
         .whileTrue(
             Commands.either(
                 AutoScore.getAutoDrive( // if have a game piece, auto align
-                    drive,
-                    () ->
-                        Optional.of(
-                            new FieldConstants.CoralObjective(autoScoreBranch, autoScoreReefLevel)),
-                    () -> autoScoreReefLevel,
-                    () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
-                    () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
-                    () -> angularSlewRateLimiter.calculate(-controller.getRightX())),
+                        drive,
+                        () ->
+                            Optional.of(
+                                new FieldConstants.CoralObjective(
+                                    autoScoreBranch, autoScoreReefLevel)),
+                        () -> autoScoreReefLevel,
+                        () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
+                        () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
+                        () -> angularSlewRateLimiter.calculate(-controller.getRightX()))
+                    .alongWith(Commands.runOnce(() -> Leds.getInstance().autoScoring = true))
+                    .andThen(Commands.runOnce(() -> Leds.getInstance().autoScoring = false)),
                 DriveCommands
                     .joystickDriveAtAngle( // if don't have a game piece, lock to coral station
                         drive,
@@ -270,8 +298,7 @@ public class RobotContainer {
                           else return robotState.getEstimatedPose().getRotation();
                         }),
                 manipulator.haveAGamePiece()));
-
-    // manipulator.funnelTof().onTrue(elevator.intakeHeight().alongWith(manipulator.autoIntake()));
+    manipulator.funnelTof().onTrue(manipulator.autoIntake());
   }
 
   /**
@@ -280,6 +307,10 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    // return AutoBuilder.buildAuto("P5 first part").andThen(AutoBuilder.buildAuto("P5 second
+    // part"));
+    // return AutoBuilder.buildAuto("P2 first part").andThen(AutoBuilder.buildAuto("P2 second
+    // part"));
+    return autoChooser.get().withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 }

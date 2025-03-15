@@ -7,43 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "CagePosition7 to G"
+            "pathName": "RSource to CD"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "scoreCoralGL4"
+            "name": "scoreCoralDL4"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "G to LSource"
+            "pathName": "D to RSource"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "intakeCoral"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "LSource to LAlgae"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "scoreCoralAL4"
+            "name": "waitToGetCoral"
           }
         }
       ]
     }
   },
   "resetOdom": false,
-  "folder": null,
+  "folder": "3Piece auto1",
   "choreoAuto": false
 }
