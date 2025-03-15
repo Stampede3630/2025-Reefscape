@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RSource to CD"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralDL4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D to RSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "waitToGetCoral"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": false,
+  "folder": "3Piece auto1",
+  "choreoAuto": false
+}

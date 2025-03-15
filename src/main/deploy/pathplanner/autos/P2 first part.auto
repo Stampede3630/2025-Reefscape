@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CagePosition2 to IJ"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreCoralIL4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "I to LSource"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "waitToGetCoral"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": false,
+  "folder": "3Piece auto1",
+  "choreoAuto": false
+}
