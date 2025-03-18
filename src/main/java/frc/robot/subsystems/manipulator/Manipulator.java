@@ -70,7 +70,6 @@ public class Manipulator extends SubsystemBase {
     return new Trigger(() -> io.getManipulatorTofDistance() < 0.1).debounce(0.1);
   }
 
-  // TODO: Check distance of .1 is appropriate? seems way too low maybe 1
   public Command autoIntake() {
     Debouncer debouncer = new Debouncer(0.1);
     return runVelocity(() -> 10)

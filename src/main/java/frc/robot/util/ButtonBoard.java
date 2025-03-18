@@ -7,8 +7,10 @@
 
 package frc.robot.util;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -16,17 +18,13 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class ButtonBoard extends CommandXboxController {
 
-  private String name;
-  private final LoggedNetworkBoolean a = new LoggedNetworkBoolean(name + "/A");
-  private final LoggedNetworkBoolean b = new LoggedNetworkBoolean(name + "/B");
-  private final LoggedNetworkBoolean x = new LoggedNetworkBoolean(name + "/X");
-  private final LoggedNetworkBoolean y = new LoggedNetworkBoolean(name + "/Y");
-  private final LoggedNetworkBoolean leftBumper = new LoggedNetworkBoolean(name + "/LeftBumper");
-  private final LoggedNetworkBoolean rightBumper = new LoggedNetworkBoolean(name + "/RightBumper");
-  private final LoggedNetworkBoolean back = new LoggedNetworkBoolean(name + "/Back");
-  private final LoggedNetworkBoolean start = new LoggedNetworkBoolean(name + "/Start");
-  private final LoggedNetworkBoolean leftStick = new LoggedNetworkBoolean(name + "/LeftStick");
-  private final LoggedNetworkBoolean rightStick = new LoggedNetworkBoolean(name + "/RightStick");
+  private final Trigger[] buttonTriggers = new Trigger[12];
+  private final LoggedNetworkBoolean[] buttons = new LoggedNetworkBoolean[12];
+  private final LoggedNetworkBoolean l1;
+  private final LoggedNetworkBoolean l2;
+  private final LoggedNetworkBoolean l3;
+  private final LoggedNetworkBoolean l4;
+  private final String name;
 
   /**
    * Construct an instance of a controller.
@@ -45,6 +43,148 @@ public class ButtonBoard extends CommandXboxController {
   public ButtonBoard(int port, String name) {
     super(port);
     this.name = name;
+    for (int i = 0; i < 12; i++) {
+      int finalI = i;
+      buttons[i] = new LoggedNetworkBoolean(name + "/" + (i + 1), false);
+      buttonTriggers[i] =
+          new Trigger(() -> buttons[finalI].get())
+              .onTrue(
+                  Commands.waitSeconds(0.02)
+                      .andThen(Commands.runOnce(() -> buttons[finalI].set(false))));
+    }
+    l1 = new LoggedNetworkBoolean(name + "/L1");
+    l2 = new LoggedNetworkBoolean(name + "/L2");
+    l3 = new LoggedNetworkBoolean(name + "/L3");
+    l4 = new LoggedNetworkBoolean(name + "/L4");
+  }
+
+  @Override
+  public Trigger button(int button, EventLoop loop) {
+    return super.button(button, loop)
+        .onTrue(Commands.runOnce(() -> buttons[button - 1].set(true)))
+        .onFalse(Commands.runOnce(() -> buttons[button - 1].set(false)))
+        .or(buttonTriggers[button - 1]);
+  }
+
+  @Override
+  public Trigger pov(int angle) {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger pov(int pov, int angle, EventLoop loop) {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povUp() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povUpRight() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povRight() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povDownRight() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povDown() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povDownLeft() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povLeft() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povUpLeft() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger povCenter() {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  public Trigger l1() {
+    return super.axisGreaterThan(0, .9)
+        .onTrue(Commands.runOnce(() -> l1.set(true)))
+        .onFalse(Commands.runOnce(() -> l1.set(false)))
+        .or(l1::get)
+        .onTrue(Commands.waitSeconds(0.02).andThen(Commands.runOnce(() -> l1.set(false))));
+  }
+
+  public Trigger l2() {
+    return super.axisLessThan(1, -.9)
+        .onTrue(Commands.runOnce(() -> l2.set(true)))
+        .onFalse(Commands.runOnce(() -> l2.set(false)))
+        .or(l2::get)
+        .onTrue(Commands.waitSeconds(0.02).andThen(Commands.runOnce(() -> l2.set(false))));
+  }
+
+  public Trigger l3() {
+    return super.axisGreaterThan(0, -.9)
+        .onTrue(Commands.runOnce(() -> l3.set(true)))
+        .onFalse(Commands.runOnce(() -> l3.set(false)))
+        .or(l3::get)
+        .onTrue(Commands.waitSeconds(0.02).andThen(Commands.runOnce(() -> l3.set(false))));
+  }
+
+  public Trigger l4() {
+    return super.axisLessThan(1, .9)
+        .onTrue(Commands.runOnce(() -> l4.set(true)))
+        .onFalse(Commands.runOnce(() -> l4.set(false)))
+        .or(l4::get)
+        .onTrue(Commands.waitSeconds(0.02).andThen(Commands.runOnce(() -> l4.set(false))));
+  }
+
+  @Override
+  public Trigger axisMagnitudeGreaterThan(int axis, double threshold, EventLoop loop) {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public Trigger axisMagnitudeGreaterThan(int axis, double threshold) {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public void setRumble(GenericHID.RumbleType type, double value) {
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
+  }
+
+  @Override
+  public boolean isConnected() {
+    return super.isConnected();
   }
 
   @Override
@@ -53,178 +193,199 @@ public class ButtonBoard extends CommandXboxController {
   }
 
   @Override
+  public Trigger button(int button) {
+    return this.button(button, CommandScheduler.getInstance().getDefaultButtonLoop());
+  }
+
+  @Override
   public Trigger a() {
-    return super.a().or(a::get).onTrue(Commands.runOnce(() -> a.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger a(EventLoop loop) {
-    return super.a(loop).or(a::get).onTrue(Commands.runOnce(() -> a.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger b() {
-    return super.b().or(b::get).onTrue(Commands.runOnce(() -> b.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger b(EventLoop loop) {
-    return super.b(loop).or(b::get).onTrue(Commands.runOnce(() -> b.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger x() {
-    return super.x().or(x::get).onTrue(Commands.runOnce(() -> x.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger x(EventLoop loop) {
-    return super.x(loop).or(x::get).onTrue(Commands.runOnce(() -> x.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger y() {
-    return super.y().or(y::get).onTrue(Commands.runOnce(() -> y.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger y(EventLoop loop) {
-    return super.y(loop).or(y::get).onTrue(Commands.runOnce(() -> y.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftBumper() {
-    return super.leftBumper()
-        .or(leftBumper::get)
-        .onTrue(Commands.runOnce(() -> leftBumper.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftBumper(EventLoop loop) {
-    return super.leftBumper(loop)
-        .or(leftBumper::get)
-        .onTrue(Commands.runOnce(() -> leftBumper.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightBumper() {
-    return super.rightBumper()
-        .or(rightBumper::get)
-        .onTrue(Commands.runOnce(() -> rightBumper.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightBumper(EventLoop loop) {
-    return super.rightBumper(loop)
-        .or(rightBumper::get)
-        .onTrue(Commands.runOnce(() -> rightBumper.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger back() {
-    return super.back().or(back::get).onTrue(Commands.runOnce(() -> back.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger back(EventLoop loop) {
-    return super.back(loop).or(back::get).onTrue(Commands.runOnce(() -> back.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger start() {
-    return super.start().or(start::get).onTrue(Commands.runOnce(() -> start.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger start(EventLoop loop) {
-    return super.start(loop).or(start::get).onTrue(Commands.runOnce(() -> start.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftStick() {
-    return super.leftStick()
-        .or(leftStick::get)
-        .onTrue(Commands.runOnce(() -> leftStick.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftStick(EventLoop loop) {
-    return super.leftStick(loop)
-        .or(leftStick::get)
-        .onTrue(Commands.runOnce(() -> leftStick.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightStick() {
-    return super.rightStick()
-        .or(rightStick::get)
-        .onTrue(Commands.runOnce(() -> rightStick.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightStick(EventLoop loop) {
-    return super.rightStick(loop)
-        .or(rightStick::get)
-        .onTrue(Commands.runOnce(() -> rightStick.set(false)));
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftTrigger(double threshold, EventLoop loop) {
-    return super.leftTrigger(threshold, loop);
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftTrigger(double threshold) {
-    return super.leftTrigger(threshold);
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger leftTrigger() {
-    return super.leftTrigger();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightTrigger(double threshold, EventLoop loop) {
-    return super.rightTrigger(threshold, loop);
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightTrigger(double threshold) {
-    return super.rightTrigger(threshold);
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public Trigger rightTrigger() {
-    return super.rightTrigger();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getLeftX() {
-    return super.getLeftX();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getRightX() {
-    return super.getRightX();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getLeftY() {
-    return super.getLeftY();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getRightY() {
-    return super.getRightY();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getLeftTriggerAxis() {
-    return super.getLeftTriggerAxis();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 
   @Override
   public double getRightTriggerAxis() {
-    return super.getRightTriggerAxis();
+    throw new UnsupportedOperationException(
+        "ButtonBoard does not support this. Use button(int button) :Trigger instead");
   }
 }

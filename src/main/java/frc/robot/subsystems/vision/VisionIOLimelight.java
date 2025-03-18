@@ -68,6 +68,10 @@ public class VisionIOLimelight implements VisionIO {
     LimelightHelpers.SetIMUMode(name, mode);
   }
 
+  public void takeSnapshot(String snapshotName) {
+    LimelightHelpers.takeSnapshot(name, snapshotName);
+  }
+
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     // Update connection status based on whether an update has been seen in the last 250ms
