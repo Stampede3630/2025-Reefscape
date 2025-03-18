@@ -14,12 +14,11 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.util.Region2D;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Contains various field dimensions and useful reference points. All units are in meters and poses

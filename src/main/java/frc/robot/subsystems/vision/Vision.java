@@ -208,12 +208,15 @@ public class Vision extends SubsystemBase {
                   && observation.ambiguity() < bestObservation.ambiguity())
                 bestObservation = observation;
             }
-          if (bestObservation
-                  .pose()
-                  .toPose2d()
-                  .getTranslation()
-                  .getDistance(ppStartingPose.getTranslation())
-              < threshold.in(Meters)) {
+          if (bestObservation.tagCount() > 1
+              || bestObservation
+                      .pose()
+                      .toPose2d()
+                      .getTranslation()
+                      .getDistance(ppStartingPose.getTranslation())
+                  < threshold.in(
+                      Meters)) { // if MT1 indicates we are less than threshold meters away from PP
+            // pose OR if we have two tags, seed with vision
             RobotState.getInstance().resetPose(bestObservation.pose().toPose2d());
           } else RobotState.getInstance().resetPose(ppStartingPose);
         });

@@ -55,10 +55,10 @@ public class ClimberIOTalonFX implements ClimberIO {
                 .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake))
         .withFeedback(new FeedbackConfigs().withFusedCANcoder(encoder))
-        .withSlot0(new Slot0Configs() // TODO needs tuning
-            .withKP(0)
-            .withKS(0)
-        );
+        .withSlot0(
+            new Slot0Configs() // TODO needs tuning
+                .withKP(0)
+                .withKS(0));
 
     motor.getConfigurator().apply(config);
 
