@@ -34,6 +34,7 @@ public class Constants {
   public static double kSomewhatImportantUpdateRate = 100;
   public static double kImportantUpdateRate = 250;
   public static boolean disableHAL = false;
+  public static int kClimberEncoderId = 0;
 
   public static void disableHAL() {
     disableHAL = true;

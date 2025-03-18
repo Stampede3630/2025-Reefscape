@@ -42,8 +42,8 @@ public class FieldConstants {
 
   public enum ReefLevel {
     L1(18, 0),
-    L2(19, -35),
-    L3(35, -35),
+    L2(20, -35),
+    L3(36, -35),
     L4(59, -90);
 
     public final double height;

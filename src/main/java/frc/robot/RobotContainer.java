@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -42,18 +46,13 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ButtonBoard;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static edu.wpi.first.units.Units.Meters;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -72,24 +71,28 @@ public class RobotContainer {
   private final Vision vision;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
-  private final ButtonBoard buttonBoard = new ButtonBoard(1, "ButtonBoard");
+  private final ButtonBoard buttonBoard = new ButtonBoard(1, "SmartDashboard/ButtonBoard");
   // Dashboard inputs
   private final LoggedDashboardChooser<PathPlannerAuto> autoChooser;
   private final Elevator elevator;
   private final Manipulator manipulator;
   private final Climber climber;
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 10);
   private final LoggedNetworkNumber intakeSpeed =
-      new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
-      new LoggedNetworkNumber("Climber/torqueCurrent", 300);
+      new LoggedNetworkNumber("SmartDashboard/Climber/torqueCurrent", 300);
   private final LoggedNetworkNumber driveTc =
-      new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
-  private final LoggedNetworkNumber l1Offset = new LoggedNetworkNumber("ElevatorOffsets/L1", 0);
-  private final LoggedNetworkNumber l2Offset = new LoggedNetworkNumber("ElevatorOffsets/L2", 0);
-  private final LoggedNetworkNumber l3Offset = new LoggedNetworkNumber("ElevatorOffsets/L3", 0);
-  private final LoggedNetworkNumber l4Offset = new LoggedNetworkNumber("ElevatorOffsets/L4", 0);
+      new LoggedNetworkNumber("SmartDashboard/Drive/torqueCurrentSetpoint", 10);
+  private final LoggedNetworkNumber l1Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L1", 0);
+  private final LoggedNetworkNumber l2Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L2", 0);
+  private final LoggedNetworkNumber l3Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L3", 0);
+  private final LoggedNetworkNumber l4Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L4", 0);
   private final LoggedNetworkBoolean takeSnapshot =
       new LoggedNetworkBoolean("SmartDashboard/Take Snapshot before Auto", false);
   @AutoLogOutput private int autoScoreBranch = 0;
@@ -259,10 +262,11 @@ public class RobotContainer {
           .button(i)
           .onTrue(
               Commands.runOnce(
-                  () -> {
-                    autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
-                    Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
-                  }));
+                      () -> {
+                        autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
+                        Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
+                      })
+                  .andThen(Commands.print("hllo")));
     }
 
     // Switch to X pattern when X button is pressed

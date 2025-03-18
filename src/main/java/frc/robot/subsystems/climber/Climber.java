@@ -31,6 +31,10 @@ public class Climber extends SubsystemBase {
     return startEnd(() -> io.runTorqueCurrent(tc.getAsDouble()), io::stop);
   }
 
+  public Command setPosition(DoubleSupplier position) {
+    return runOnce(() -> io.runPosition(position.getAsDouble()));
+  }
+
   public Command stop() {
     return runOnce(io::stop);
   }
