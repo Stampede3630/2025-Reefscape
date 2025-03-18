@@ -9,10 +9,14 @@ package frc.robot.subsystems.climber;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -23,6 +27,7 @@ import frc.robot.Constants;
 
 public class ClimberIOTalonFX implements ClimberIO {
   private final TalonFX motor;
+  private final CANcoder encoder;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
   private final StatusSignal<Angle> position;
@@ -38,16 +43,26 @@ public class ClimberIOTalonFX implements ClimberIO {
 
   private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0);
+  private final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0);
+  private final StatusSignal<Angle> absolutePosition;
 
   public ClimberIOTalonFX() {
     motor = new TalonFX(Constants.kClimberMotorId, Constants.kSwerveCanBus);
-    config.withMotorOutput(
-        new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Brake));
+    encoder = new CANcoder(Constants.kClimberEncoderId, Constants.kSwerveCanBus);
+    config
+        .withMotorOutput(
+            new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+                .withNeutralMode(NeutralModeValue.Brake))
+        .withFeedback(new FeedbackConfigs().withFusedCANcoder(encoder))
+        .withSlot0(new Slot0Configs() // TODO needs tuning
+            .withKP(0)
+            .withKS(0)
+        );
 
     motor.getConfigurator().apply(config);
 
+    absolutePosition = encoder.getAbsolutePosition();
     position = motor.getPosition();
     velocity = motor.getVelocity();
     reference = motor.getClosedLoopReference();
@@ -67,7 +82,7 @@ public class ClimberIOTalonFX implements ClimberIO {
         statorCurrent,
         supplyCurrent);
 
-    ParentDevice.optimizeBusUtilizationForAll(motor);
+    ParentDevice.optimizeBusUtilizationForAll(motor, encoder);
   }
 
   @Override
@@ -81,9 +96,11 @@ public class ClimberIOTalonFX implements ClimberIO {
                 statorCurrent,
                 supplyCurrent,
                 voltage,
-                temp)
+                temp,
+                absolutePosition)
             .isOK();
 
+    inputs.absolutePosition = absolutePosition.getValueAsDouble();
     inputs.connected = connectedDebouncer.calculate(connected);
     inputs.position = position.getValueAsDouble();
     inputs.velocity = velocity.getValueAsDouble();
@@ -92,6 +109,11 @@ public class ClimberIOTalonFX implements ClimberIO {
     inputs.statorCurrent = statorCurrent.getValueAsDouble();
     inputs.voltage = voltage.getValueAsDouble();
     inputs.temp = temp.getValueAsDouble();
+  }
+
+  @Override
+  public void runPosition(double position) {
+    motor.setControl(positionRequest.withPosition(position));
   }
 
   @Override

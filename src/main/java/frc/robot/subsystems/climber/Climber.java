@@ -9,8 +9,9 @@ package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.function.DoubleSupplier;
 
 public class Climber extends SubsystemBase {
 
@@ -29,6 +30,10 @@ public class Climber extends SubsystemBase {
 
   public Command runTorqueCurrent(DoubleSupplier tc) {
     return startEnd(() -> io.runTorqueCurrent(tc.getAsDouble()), io::stop);
+  }
+
+  public Command setPosition(DoubleSupplier position) {
+    return runOnce(() -> io.runPosition(position.getAsDouble()));
   }
 
   public Command stop() {
