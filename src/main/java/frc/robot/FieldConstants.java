@@ -14,11 +14,12 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.util.Region2D;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Contains various field dimensions and useful reference points. All units are in meters and poses
@@ -42,8 +43,8 @@ public class FieldConstants {
 
   public enum ReefLevel {
     L1(18, 0),
-    L2(19, -35),
-    L3(35, -35),
+    L2(20, -35),
+    L3(36, -35),
     L4(59, -90);
 
     public final double height;
