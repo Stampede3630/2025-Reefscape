@@ -9,8 +9,9 @@ package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.util.TimedSubsystem;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.function.DoubleSupplier;
 
 public class Climber extends TimedSubsystem {
 

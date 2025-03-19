@@ -7,20 +7,19 @@
 
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.TimedSubsystem;
+import java.util.Objects;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
-
-import java.util.Objects;
-import java.util.function.DoubleSupplier;
-
-import static edu.wpi.first.units.Units.Seconds;
 
 public class Elevator extends TimedSubsystem {
   private static final String KEY = "Elevator";
