@@ -46,11 +46,10 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
   private final TalonFX follower;
   private final Debouncer leaderConnectedDebouncer = new Debouncer(0.5);
   private final Debouncer followerConnectedDebouncer = new Debouncer(0.5);
-
+  private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
   private double positionSetpoint = 0;
   private final MotionMagicExpoVoltage positionRequest =
       new MotionMagicExpoVoltage(positionSetpoint).withSlot(0).withEnableFOC(true);
-  private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
   public ElevatorIOTalonFX() {
     leader = new TalonFX(Constants.kElevatorLeaderId, Constants.kSwerveCanBus);
@@ -61,15 +60,6 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
             new MotorOutputConfigs()
                 .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake))
-        .withSlot0(
-            new Slot0Configs()
-                .withKP(1)
-                .withKG(0.21875)
-                .withKS(0)
-                .withKV(.19)
-                .withKA(0)
-                .withKI(0.005)
-                .withGravityType(GravityTypeValue.Elevator_Static))
         .withFeedback(
             new FeedbackConfigs()
                 .withSensorToMechanismRatio(1.09435)
@@ -80,12 +70,6 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
                 .withForwardSoftLimitThreshold(60) // 60 inches to be safe for now
                 .withReverseSoftLimitEnable(true)
                 .withReverseSoftLimitThreshold(0))
-        .withMotionMagic(
-            new MotionMagicConfigs()
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0)
-                .withMotionMagicExpo_kA(.1)
-                .withMotionMagicExpo_kV(.1))
         .withAudio(Constants.kAudioConfigs);
 
     leader.getConfigurator().apply(config);
@@ -120,6 +104,38 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
     ParentDevice.optimizeBusUtilizationForAll(leader);
 
     follower.setControl(new Follower(Constants.kElevatorLeaderId, false));
+  }
+
+  @Override
+  public void setPIDF(
+      double kP,
+      double kI,
+      double kD,
+      double kS,
+      double kV,
+      double kA,
+      double kG,
+      double mmKA,
+      double mmKV) {
+    config
+        .withSlot0(
+            new Slot0Configs()
+                .withKP(kP)
+                .withKI(kI)
+                .withKD(kD)
+                .withKS(kS)
+                .withKV(kV)
+                .withKG(kG)
+                .withKA(kA)
+                .withGravityType(GravityTypeValue.Elevator_Static))
+        .withMotionMagic(
+            new MotionMagicConfigs()
+                .withMotionMagicExpo_kA(mmKA)
+                .withMotionMagicExpo_kV(mmKV)
+                .withMotionMagicAcceleration(0)
+                .withMotionMagicCruiseVelocity(0));
+    leader.getConfigurator().apply(config);
+    follower.getConfigurator().apply(config);
   }
 
   @Override

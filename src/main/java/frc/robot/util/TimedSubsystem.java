@@ -8,23 +8,25 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
 /** Utility class for logging code execution times. */
-public class LoggedTracer {
-  private static double startTime = -1.0;
+public abstract class TimedSubsystem extends SubsystemBase {
+  private final String epochName;
 
-  private LoggedTracer() {}
-
-  /** Reset the clock. */
-  public static void reset() {
-    startTime = Timer.getFPGATimestamp();
+  public TimedSubsystem(String epochName) {
+    this.epochName = epochName;
   }
 
   /** Save the time elapsed since the last reset or record. */
-  public static void record(String epochName) {
+  @Override
+  public final void periodic() {
+    double startTime = Timer.getFPGATimestamp();
+    timedPeriodic();
     double now = Timer.getFPGATimestamp();
-    Logger.recordOutput("LoggedTracer/" + epochName + "MS", (now - startTime) * 1000.0);
-    startTime = now;
+    Logger.recordOutput("PeriodicTimes/" + epochName + " ms", (now - startTime) * 1000.0);
   }
+
+  public abstract void timedPeriodic();
 }

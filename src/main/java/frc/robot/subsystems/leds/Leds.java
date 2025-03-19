@@ -12,12 +12,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.FieldConstants;
-import frc.robot.util.LoggedTracer;
-import frc.robot.util.VirtualSubsystem;
+import frc.robot.util.TimedSubsystem;
 import java.util.List;
 import java.util.Optional;
 
-public class Leds extends VirtualSubsystem {
+public class Leds extends TimedSubsystem {
   // Constants
   private static final boolean prideLeds = false;
   private static final int minLoopCycleCount = 10;
@@ -76,6 +75,7 @@ public class Leds extends VirtualSubsystem {
   private boolean estopped = false;
 
   private Leds() {
+    super("LEDs");
     leds = new AddressableLED(0);
     buffer = new AddressableLEDBuffer(length);
     leds.setLength(length);
@@ -104,7 +104,7 @@ public class Leds extends VirtualSubsystem {
     return instance;
   }
 
-  public synchronized void periodic() {
+  public synchronized void timedPeriodic() {
     // Update alliance color
     if (DriverStation.isFMSAttached()) {
       alliance = DriverStation.getAlliance();
@@ -252,9 +252,6 @@ public class Leds extends VirtualSubsystem {
 
     // Update LEDs
     leds.setData(buffer);
-
-    // Record cycle time
-    LoggedTracer.record("LEDs");
   }
 
   private Color solid(Section section, Color color) {

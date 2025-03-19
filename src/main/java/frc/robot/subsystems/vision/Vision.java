@@ -17,9 +17,9 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.util.TimedSubsystem;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-public class Vision extends SubsystemBase {
+public class Vision extends TimedSubsystem {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
@@ -37,6 +37,7 @@ public class Vision extends SubsystemBase {
       new LoggedNetworkBoolean("Vision/Use MegaTag 1", true);
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
+    super("Vision");
     this.consumer = consumer;
     this.io = io;
 
@@ -55,7 +56,7 @@ public class Vision extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
+  public void timedPeriodic() {
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
       Logger.processInputs("Vision/Camera" + i, inputs[i]);
