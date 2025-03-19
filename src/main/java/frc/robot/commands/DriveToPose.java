@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,9 +24,11 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.TimeDifferentiation;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveToPose extends Command {
@@ -76,10 +79,15 @@ public class DriveToPose extends Command {
   private final ProfiledPIDController thetaController =
       new ProfiledPIDController(
           0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), Constants.loopPeriodSecs);
-
+  private final TimeDifferentiation driveErrorAbsDt =
+      new TimeDifferentiation().withFilter(LinearFilter.singlePoleIIR(0.1, 0.02));
+  private final TimeDifferentiation thetaErrorAbsDt =
+      new TimeDifferentiation().withFilter(LinearFilter.singlePoleIIR(0.1, 0.02));
+  private final LinearFilter driveErrorAbsFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+  private final LinearFilter thetaErrorAbsFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+  @Getter private double driveErrorAbs = 0.0;
+  @Getter private double thetaErrorAbs = 0.0;
   private Translation2d lastSetpointTranslation = new Translation2d();
-  private double driveErrorAbs = 0.0;
-  private double thetaErrorAbs = 0.0;
   @Getter private boolean running = false;
   private Supplier<Pose2d> robot;
 
@@ -177,6 +185,8 @@ public class DriveToPose extends Command {
             0.0,
             1.0);
     driveErrorAbs = currentDistance;
+    driveErrorAbsFilter.calculate(driveErrorAbs);
+    driveErrorAbsDt.calculate(driveErrorAbs);
     driveController.reset(
         lastSetpointTranslation.getDistance(targetPose.getTranslation()),
         driveController.getSetpoint().velocity);
@@ -198,6 +208,8 @@ public class DriveToPose extends Command {
                 currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
     thetaErrorAbs =
         Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
+    thetaErrorAbsFilter.calculate(thetaErrorAbs);
+    thetaErrorAbsDt.calculate(thetaErrorAbs);
     if (thetaErrorAbs < thetaController.getPositionTolerance()) thetaVelocity = 0.0;
 
     Translation2d driveVelocity =
@@ -240,6 +252,14 @@ public class DriveToPose extends Command {
         });
     Logger.recordOutput("DriveToPose/robotgiver", robot.get());
     Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {targetPose});
+    Logger.recordOutput("DriveToPose/DriveErrorAbs", driveErrorAbs);
+    Logger.recordOutput("DriveToPose/ThetaErrorAbs", thetaErrorAbs);
+    Logger.recordOutput("DriveToPose/DriveErrorAbsFiltered", driveErrorAbsFilter.lastValue());
+    Logger.recordOutput("DriveToPose/ThetaErrorAbsFiltered", thetaErrorAbsFilter.lastValue());
+    Logger.recordOutput("DriveToPose/DriveErrorAbsdt", driveErrorAbsDt.getLastUnfilteredValue());
+    Logger.recordOutput("DriveToPose/ThetaErrorAbsdt", thetaErrorAbsDt.getLastUnfilteredValue());
+    Logger.recordOutput("DriveToPose/DriveErrorAbsdtFiltered", driveErrorAbsDt.getLastValue());
+    Logger.recordOutput("DriveToPose/ThetaErrorAbsdtFiltered", thetaErrorAbsDt.getLastValue());
   }
 
   @Override
@@ -261,5 +281,17 @@ public class DriveToPose extends Command {
     return running
         && Math.abs(driveErrorAbs) < driveTolerance
         && Math.abs(thetaErrorAbs) < thetaTolerance.getRadians();
+  }
+
+  @AutoLogOutput
+  public boolean stuck() {
+    if (atGoal()) return false; // If at goal, not stuck
+    // TODO tune these values
+    // If the robot is not at goal and has steady-state error, but the error is not changing, it is
+    // stuck
+    return driveErrorAbsDt.getLastValue() < 0.1
+        && thetaErrorAbsDt.getLastValue() < 0.1
+        && driveErrorAbs > 0.08
+        && thetaErrorAbs > 0.1;
   }
 }
