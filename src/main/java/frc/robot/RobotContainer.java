@@ -7,10 +7,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -46,13 +42,17 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ButtonBoard;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import java.util.List;
+import java.util.Optional;
+
+import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -356,7 +356,6 @@ public class RobotContainer {
     List<String> autoNames = AutoBuilder.getAllAutoNames();
 
     PathPlannerAuto defaultOption = null;
-    List<PathPlannerAuto> options = new ArrayList<>();
 
     for (String autoName : autoNames) {
       PathPlannerAuto auto = new PathPlannerAuto(autoName);
@@ -364,7 +363,7 @@ public class RobotContainer {
       if (!defaultAutoName.isEmpty() && defaultAutoName.equals(autoName)) {
         defaultOption = auto;
       } else {
-        options.add(auto);
+        chooser.addOption(autoName, auto);
       }
     }
 
