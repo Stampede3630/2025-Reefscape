@@ -28,7 +28,6 @@ import frc.robot.util.TimeDifferentiation;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class DriveToPose extends Command {
@@ -260,6 +259,7 @@ public class DriveToPose extends Command {
     Logger.recordOutput("DriveToPose/ThetaErrorAbsdt", thetaErrorAbsDt.getLastUnfilteredValue());
     Logger.recordOutput("DriveToPose/DriveErrorAbsdtFiltered", driveErrorAbsDt.getLastValue());
     Logger.recordOutput("DriveToPose/ThetaErrorAbsdtFiltered", thetaErrorAbsDt.getLastValue());
+    Logger.recordOutput("DriveToPose/IsStuck", stuck());
   }
 
   @Override
@@ -283,15 +283,12 @@ public class DriveToPose extends Command {
         && Math.abs(thetaErrorAbs) < thetaTolerance.getRadians();
   }
 
-  @AutoLogOutput
   public boolean stuck() {
     if (atGoal()) return false; // If at goal, not stuck
     // TODO tune these values
     // If the robot is not at goal and has steady-state error, but the error is not changing, it is
     // stuck
-    return driveErrorAbsDt.getLastValue() < 0.1
-        && thetaErrorAbsDt.getLastValue() < 0.1
-        && driveErrorAbs > 0.08
-        && thetaErrorAbs > 0.1;
+    return Math.abs(driveErrorAbsDt.getLastValue()) < 0.1 && driveErrorAbs > 0.08
+        || Math.abs(thetaErrorAbsDt.getLastValue()) < 0.1 && thetaErrorAbs > 0.1;
   }
 }

@@ -40,7 +40,10 @@ import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
-import frc.robot.subsystems.vision.*;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ButtonBoard;
 import java.util.ArrayList;
@@ -75,7 +78,7 @@ public class RobotContainer {
   private final Manipulator manipulator;
   private final Climber climber;
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 10);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 15);
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
@@ -231,10 +234,10 @@ public class RobotContainer {
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
-    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
+    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> outtakeSpeed.get()));
     controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
     // Todo: this is where we add LEDs
-    controller.start().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
+    controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
     buttonBoard
