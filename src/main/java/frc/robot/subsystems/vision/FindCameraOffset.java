@@ -49,7 +49,7 @@ public class FindCameraOffset implements Vision.VisionConsumer {
     Logger.recordOutput("Vision/FindCameraOffset/RobotPoseInFieldSpace", robotPoseInFieldSpace);
     Pose3d cameraPoseInFieldSpace = observation.visionPose();
     Logger.recordOutput("Vision/FindCameraOffset/CameraPoseInFieldSpace", cameraPoseInFieldSpace);
-    Pose3d cameraPoseInRobotSpace = cameraPoseInFieldSpace.relativeTo(robotPoseInFieldSpace);
+    Pose3d cameraPoseInRobotSpace = robotPoseInFieldSpace.relativeTo(cameraPoseInFieldSpace);
     Logger.recordOutput("Vision/FindCameraOffset/CameraPoseInRobotSpace", cameraPoseInRobotSpace);
   }
 }

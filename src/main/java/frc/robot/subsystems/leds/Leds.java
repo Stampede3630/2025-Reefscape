@@ -203,7 +203,7 @@ public class Leds extends TimedSubsystem {
       solid(bottomSection, secondaryHexColor);
 
       // Auto scoring reef
-      if (autoScoringReef) {
+      if (autoScoring) {
         solid(fullSection, Color.kAqua);
         solid(
             bottomQuartSection,
@@ -216,9 +216,9 @@ public class Leds extends TimedSubsystem {
       }
 
       // Auto scoring
-      if (autoScoring) {
-        solid(fullSection, Color.kMediumAquamarine);
-      }
+      // if (autoScoring) {
+      //   solid(fullSection, Color.kAzure);
+      //  }
 
       // Climbing alert
       if (climbing) {

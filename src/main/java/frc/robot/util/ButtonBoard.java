@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.HashMap;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class ButtonBoard extends CommandXboxController {
@@ -22,6 +23,8 @@ public class ButtonBoard extends CommandXboxController {
   private final LoggedNetworkBoolean l3;
   private final LoggedNetworkBoolean l4;
   private final String name;
+
+  private HashMap<ButtonLoop, Trigger> map = new HashMap<>();
 
   /**
    * Construct an instance of a controller.
@@ -60,12 +63,21 @@ public class ButtonBoard extends CommandXboxController {
     l4 = new LoggedNetworkBoolean(name + "/L4", false);
   }
 
+  public record ButtonLoop(int button, EventLoop loop) {}
+
   @Override
   public Trigger button(int button, EventLoop loop) {
-    return super.button(button, loop)
-        .onTrue(Commands.runOnce(() -> buttons[button - 1].set(true)).ignoringDisable(true))
-        .onFalse(Commands.runOnce(() -> buttons[button - 1].set(false)).ignoringDisable(true))
-        .or(buttonTriggers[button - 1]);
+    if (map.containsKey(new ButtonLoop(button, loop))) {
+      return map.get(new ButtonLoop(button, loop));
+    } else {
+      map.put(
+          new ButtonLoop(button, loop),
+          super.button(button, loop)
+              .onTrue(Commands.runOnce(() -> buttons[button - 1].set(true)).ignoringDisable(true))
+              .onFalse(Commands.runOnce(() -> buttons[button - 1].set(false)).ignoringDisable(true))
+              .or(buttonTriggers[button - 1]));
+    }
+    return map.get(new ButtonLoop(button, loop));
   }
 
   public Trigger l1() {
