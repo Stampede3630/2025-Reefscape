@@ -32,5 +32,6 @@ public interface ClimberIO {
     public double supplyCurrent = 0.0;
     public double temp = 0.0;
     public double absolutePosition = 0.0;
+    public double encoderPosition = 0.0;
   }
 }
