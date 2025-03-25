@@ -15,7 +15,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicExpoDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -45,7 +45,8 @@ public class ClimberIOTalonFX implements ClimberIO {
 
   private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
   private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0);
-  private final MotionMagicExpoDutyCycle positionRequest = new MotionMagicExpoDutyCycle(0);
+  private final MotionMagicExpoTorqueCurrentFOC positionRequest =
+      new MotionMagicExpoTorqueCurrentFOC(0);
   private final StatusSignal<Angle> absolutePosition;
   private final StatusSignal<Angle> encoderPosition;
   private ClimberIOInputs inputs = new ClimberIOInputs();

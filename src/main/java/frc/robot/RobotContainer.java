@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -42,18 +46,12 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ButtonBoard;
+import java.util.List;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
-import java.util.List;
-import java.util.Optional;
-
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Seconds;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -287,18 +285,8 @@ public class RobotContainer {
     // controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
     // controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
-    controller
-        .povLeft()
-        .whileTrue(
-            elevator
-                .setPositionBlocking(() -> 10, Seconds.of(10))
-                .andThen(climber.setPosition(() -> -.26)));
-    controller
-        .povLeft()
-        .whileTrue(
-            elevator
-                .setPositionBlocking(() -> 10, Seconds.of(10))
-                .andThen(climber.setPosition(() -> -.049)));
+    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
+    controller.povRight().whileTrue(climber.setPosition(() -> -.049));
 
     controller
         .rightBumper()
