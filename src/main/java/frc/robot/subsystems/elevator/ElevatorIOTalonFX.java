@@ -106,42 +106,52 @@ public class ElevatorIOTalonFX implements ElevatorIO, HasTalonFX {
     follower.setControl(new Follower(Constants.kElevatorLeaderId, false));
   }
 
-  @Override
-  public void setPIDF(
-      double kP,
-      double kI,
-      double kD,
-      double kS,
-      double kV,
-      double kA,
-      double kG,
-      double mmKA,
-      double mmKV) {
-    config
-        .withSlot0(
-            new Slot0Configs()
-                .withKP(kP)
-                .withKI(kI)
-                .withKD(kD)
-                .withKS(kS)
-                .withKV(kV)
-                .withKG(kG)
-                .withKA(kA)
-                .withGravityType(GravityTypeValue.Elevator_Static))
-        .withMotionMagic(
-            new MotionMagicConfigs()
-                .withMotionMagicExpo_kA(mmKA)
-                .withMotionMagicExpo_kV(mmKV)
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0));
+  public void setPIDFSlot0(
+      double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
+    config.withSlot0(
+        new Slot0Configs()
+            .withKP(kP)
+            .withKI(kI)
+            .withKD(kD)
+            .withKS(kS)
+            .withKV(kV)
+            .withKG(kG)
+            .withKA(kA)
+            .withGravityType(GravityTypeValue.Elevator_Static));
+    leader.getConfigurator().apply(config);
+  }
+
+  public void setPIDFSlot1(
+      double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
+    config.withSlot1(
+        new Slot1Configs()
+            .withKP(kP)
+            .withKI(kI)
+            .withKD(kD)
+            .withKS(kS)
+            .withKV(kV)
+            .withKG(kG)
+            .withKA(kA)
+            .withGravityType(GravityTypeValue.Elevator_Static));
+    leader.getConfigurator().apply(config);
+    follower.getConfigurator().apply(config);
+  }
+
+  public void setMmConstants(double mmKv, double mmKa) {
+    config.withMotionMagic(
+        new MotionMagicConfigs()
+            .withMotionMagicExpo_kA(mmKa)
+            .withMotionMagicExpo_kV(mmKv)
+            .withMotionMagicAcceleration(0)
+            .withMotionMagicCruiseVelocity(0));
     leader.getConfigurator().apply(config);
     follower.getConfigurator().apply(config);
   }
 
   @Override
-  public void runPosition(double position) {
+  public void runPosition(double position, int slot) {
     positionSetpoint = position;
-    leader.setControl(positionRequest.withPosition(positionSetpoint));
+    leader.setControl(positionRequest.withPosition(positionSetpoint).withSlot(slot));
   }
 
   @Override

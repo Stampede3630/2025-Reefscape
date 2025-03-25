@@ -338,6 +338,7 @@ public class RobotContainer {
     Command autoCommand =
         vision
             .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
+            .alongWith(climber.setPosition(() -> -.049))
             .andThen(auto.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
     if (takeSnapshot.get() || DriverStation.isFMSAttached()) {
       return vision

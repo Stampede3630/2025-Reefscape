@@ -17,18 +17,15 @@ public interface ElevatorIO {
 
   default void stop() {}
 
-  default void setPIDF(
-      double kP,
-      double kI,
-      double kD,
-      double kS,
-      double kV,
-      double kA,
-      double kG,
-      double mmKA,
-      double mmKV) {}
+  default void setPIDFSlot0(
+      double kP, double kI, double kD, double kS, double kV, double kA, double kG) {}
 
-  default void runPosition(double positionRad) {}
+  default void setPIDFSlot1(
+      double kP, double kI, double kD, double kS, double kV, double kA, double kG) {}
+
+  default void setMmConstants(double mmKv, double mmKa) {}
+
+  default void runPosition(double position, int slot) {}
 
   default boolean setCoastMode(boolean enabled) {
     return true;

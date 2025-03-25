@@ -48,57 +48,41 @@ public class Elevator extends TimedSubsystem {
   private final LoggedTunableNumber kDDown = new LoggedTunableNumber("Elevator/kDDown", 0);
   private final LoggedTunableNumber kGDown = new LoggedTunableNumber("Elevator/kGDown", 0.21875);
   private final LoggedTunableNumber kSDown = new LoggedTunableNumber("Elevator/kSDown", 0);
-  private final LoggedTunableNumber kVDown = new LoggedTunableNumber("Elevator/kVDown", .19);
+  private final LoggedTunableNumber kVDown = new LoggedTunableNumber("Elevator/kVDown", .1);
   private final LoggedTunableNumber kADown = new LoggedTunableNumber("Elevator/kADown", 0);
   private final LoggedTunableNumber kIDown = new LoggedTunableNumber("Elevator/kIDown", 0.005);
   private final LoggedTunableNumber mmKaDown = new LoggedTunableNumber("Elevator/mmKaDown", 0.1);
-  private final LoggedTunableNumber mmKvDown = new LoggedTunableNumber("Elevator/mmKvDown", 0.1);
+  private final LoggedTunableNumber mmKvDown = new LoggedTunableNumber("Elevator/mmKvDown", 0.075);
   @AutoLogOutput private boolean coastModeEnabled = true;
   private double setpoint = -1;
 
   public Elevator(ElevatorIO io) {
     super("Elevator");
     this.io = io;
-    io.setPIDF(
-        kP.get(),
-        kI.get(),
-        kD.get(),
-        kS.get(),
-        kV.get(),
-        kA.get(),
-        kG.get(),
-        mmKa.get(),
-        mmKv.get());
+
+    io.setPIDFSlot0(kP.get(), kI.get(), kD.get(), kS.get(), kV.get(), kA.get(), kG.get());
+
+    io.setPIDFSlot1(
+        kPDown.get(),
+        kIDown.get(),
+        kDDown.get(),
+        kSDown.get(),
+        kVDown.get(),
+        kADown.get(),
+        kGDown.get());
   }
 
   public Command setPosition(DoubleSupplier position) {
     return runOnce(
         () -> {
           if (setpoint > position.getAsDouble()) { // going down
-            io.setPIDF(
-                kPDown.get(),
-                kIDown.get(),
-                kDDown.get(),
-                kSDown.get(),
-                kVDown.get(),
-                kADown.get(),
-                kGDown.get(),
-                mmKaDown.get(),
-                mmKvDown.get());
+            io.setMmConstants(mmKvDown.get(), mmKaDown.get());
+            io.runPosition(setpoint, 1);
           } else {
-            io.setPIDF(
-                kP.get(),
-                kI.get(),
-                kD.get(),
-                kS.get(),
-                kV.get(),
-                kA.get(),
-                kG.get(),
-                mmKa.get(),
-                mmKv.get());
+            io.setMmConstants(mmKv.get(), mmKa.get());
+            io.runPosition(setpoint, 0);
           }
           this.setpoint = position.getAsDouble();
-          io.runPosition(setpoint);
         });
   }
 
@@ -158,6 +142,31 @@ public class Elevator extends TimedSubsystem {
     if (inputs.leaderTorqueCurrent < -15 && inputs.velocity == 0) {
       seedPosition(() -> inputs.reference);
     }
+
+    if (kP.hasChanged(hashCode())
+        || kI.hasChanged(hashCode())
+        || kD.hasChanged(hashCode())
+        || kG.hasChanged(hashCode())
+        || kS.hasChanged(hashCode())
+        || kV.hasChanged(hashCode())
+        || kA.hasChanged(hashCode()))
+      io.setPIDFSlot0(kP.get(), kI.get(), kD.get(), kS.get(), kV.get(), kA.get(), kG.get());
+
+    if (kPDown.hasChanged(hashCode())
+        || kIDown.hasChanged(hashCode())
+        || kDDown.hasChanged(hashCode())
+        || kGDown.hasChanged(hashCode())
+        || kSDown.hasChanged(hashCode())
+        || kVDown.hasChanged(hashCode())
+        || kADown.hasChanged(hashCode()))
+      io.setPIDFSlot1(
+          kPDown.get(),
+          kIDown.get(),
+          kDDown.get(),
+          kSDown.get(),
+          kVDown.get(),
+          kADown.get(),
+          kGDown.get());
 
     setCoastMode(coastOverride.get());
   }
