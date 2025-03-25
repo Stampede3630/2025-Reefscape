@@ -7,11 +7,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Seconds;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -47,12 +42,18 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ButtonBoard;
-import java.util.List;
-import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import java.util.List;
+import java.util.Optional;
+
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Seconds;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -348,7 +349,7 @@ public class RobotContainer {
     PathPlannerAuto auto = autoChooser.get();
     Command autoCommand =
         vision
-            .seedPoseBeforeAuto(auto.getStartingPose(), Meters.of(1))
+            .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
             .andThen(auto.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
     if (takeSnapshot.get() || DriverStation.isFMSAttached()) {
       return vision
