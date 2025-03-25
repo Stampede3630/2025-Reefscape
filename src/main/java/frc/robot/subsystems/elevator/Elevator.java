@@ -41,8 +41,8 @@ public class Elevator extends TimedSubsystem {
   private final LoggedTunableNumber kV = new LoggedTunableNumber("Elevator/kV", .19);
   private final LoggedTunableNumber kA = new LoggedTunableNumber("Elevator/kA", 0);
   private final LoggedTunableNumber kI = new LoggedTunableNumber("Elevator/kI", 0.005);
-  private final LoggedTunableNumber mmKa = new LoggedTunableNumber("Elevator/mmKa", 0.1);
-  private final LoggedTunableNumber mmKv = new LoggedTunableNumber("Elevator/mmKv", 0.1);
+  private final LoggedTunableNumber mmKa = new LoggedTunableNumber("Elevator/mmKa", 0.075);
+  private final LoggedTunableNumber mmKv = new LoggedTunableNumber("Elevator/mmKv", 0.075);
 
   private final LoggedTunableNumber kPDown = new LoggedTunableNumber("Elevator/kPDown", 1);
   private final LoggedTunableNumber kDDown = new LoggedTunableNumber("Elevator/kDDown", 0);
@@ -70,17 +70,24 @@ public class Elevator extends TimedSubsystem {
         kVDown.get(),
         kADown.get(),
         kGDown.get());
+
+    io.setMmConstants(mmKv.get(), mmKa.get());
   }
 
   public Command setPosition(DoubleSupplier position) {
     return runOnce(
         () -> {
-          if (setpoint > position.getAsDouble()) { // going down
-            io.setMmConstants(mmKvDown.get(), mmKaDown.get());
-            io.runPosition(setpoint, 1);
+          if (inputs.position > position.getAsDouble()) { // going down
+            //            System.out.println("going down. SP: " + setpoint + " pos: " +
+            // position.getAsDouble());
+            //            io.setMmConstants(mmKvDown.get(), mmKaDown.get());
+            io.runPosition(position.getAsDouble(), 1);
           } else {
-            io.setMmConstants(mmKv.get(), mmKa.get());
-            io.runPosition(setpoint, 0);
+            //            System.out.println("going up. SP: " + setpoint + " pos: " +
+            // position.getAsDouble());
+
+            //            io.setMmConstants(mmKv.get(), mmKa.get());
+            io.runPosition(position.getAsDouble(), 0);
           }
           this.setpoint = position.getAsDouble();
         });
@@ -167,6 +174,8 @@ public class Elevator extends TimedSubsystem {
           kVDown.get(),
           kADown.get(),
           kGDown.get());
+    if (mmKa.hasChanged(hashCode()) || mmKv.hasChanged(hashCode()))
+      io.setMmConstants(mmKv.get(), mmKa.get());
 
     setCoastMode(coastOverride.get());
   }
