@@ -9,6 +9,7 @@ package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -53,6 +54,7 @@ public class Elevator extends TimedSubsystem {
   private final LoggedTunableNumber kIDown = new LoggedTunableNumber("Elevator/kIDown", 0.005);
   private final LoggedTunableNumber mmKaDown = new LoggedTunableNumber("Elevator/mmKaDown", 0.1);
   private final LoggedTunableNumber mmKvDown = new LoggedTunableNumber("Elevator/mmKvDown", 0.075);
+  private final Debouncer elevatorResetDebouncer = new Debouncer(1);
   @AutoLogOutput private boolean coastModeEnabled = true;
   private double setpoint = -1;
 
@@ -177,6 +179,9 @@ public class Elevator extends TimedSubsystem {
     if (mmKa.hasChanged(hashCode()) || mmKv.hasChanged(hashCode()))
       io.setMmConstants(mmKv.get(), mmKa.get());
 
+    if (elevatorResetDebouncer.calculate(
+        inputs.position < 2 && Math.abs(inputs.leaderTorqueCurrent) > 20)) // stalling at the bottom
+    io.seedPosition(0);
     setCoastMode(coastOverride.get());
   }
 
