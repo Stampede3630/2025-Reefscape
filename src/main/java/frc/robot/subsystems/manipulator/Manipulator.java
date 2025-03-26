@@ -26,7 +26,7 @@ public class Manipulator extends TimedSubsystem {
   private final Alert motorDisconnectedAlert =
       new Alert("Manipulator motor disconnected!", Alert.AlertType.kWarning);
   private final LoggedNetworkBoolean coastOverride =
-      new LoggedNetworkBoolean(KEY + "/CoastOverride");
+      new LoggedNetworkBoolean(KEY + "/CoastOverride", false);
   @AutoLogOutput private boolean coastModeEnabled = true;
 
   public Manipulator(ManipulatorIO io) {

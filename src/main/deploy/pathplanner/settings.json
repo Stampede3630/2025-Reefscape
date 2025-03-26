@@ -18,8 +18,8 @@
   "autoFolders": [
     "3Piece auto1"
   ],
-  "defaultMaxVel": 3.0,
-  "defaultMaxAccel": 3.0,
+  "defaultMaxVel": 4.0,
+  "defaultMaxAccel": 4.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
@@ -27,7 +27,7 @@
   "robotMOI": 26.403,
   "robotTrackwidth": 0.546,
   "driveWheelRadius": 0.0508,
-  "driveGearing": 7.13,
+  "driveGearing": 7.125,
   "maxDriveSpeed": 4.32816,
   "driveMotorType": "krakenX60FOC",
   "driveCurrentLimit": 90.0,

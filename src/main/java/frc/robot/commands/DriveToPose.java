@@ -55,12 +55,12 @@ public class DriveToPose extends Command {
       new LoggedTunableNumber("DriveToPose/FFMaxRadius");
 
   static {
-    drivekP.initDefault(1.4);
+    drivekP.initDefault(1.2);
     drivekD.initDefault(0.0);
-    thetakP.initDefault(4.0);
+    thetakP.initDefault(8.0);
     thetakD.initDefault(0.0);
-    driveMaxVelocity.initDefault(10);
-    driveMaxAcceleration.initDefault(20);
+    driveMaxVelocity.initDefault(4);
+    driveMaxAcceleration.initDefault(4);
     thetaMaxVelocity.initDefault(Units.degreesToRadians(360.0));
     thetaMaxAcceleration.initDefault(8.0);
     driveTolerance.initDefault(0.02);
@@ -260,6 +260,8 @@ public class DriveToPose extends Command {
     Logger.recordOutput("DriveToPose/DriveErrorAbsdtFiltered", driveErrorAbsDt.getLastValue());
     Logger.recordOutput("DriveToPose/ThetaErrorAbsdtFiltered", thetaErrorAbsDt.getLastValue());
     Logger.recordOutput("DriveToPose/IsStuck", stuck());
+
+    Logger.recordOutput("DriveToPose/AtGoal", atGoal());
   }
 
   @Override

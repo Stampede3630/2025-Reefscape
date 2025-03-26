@@ -60,6 +60,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private boolean hasRunAutoOnceBefore = false;
   private final RobotState robotState = RobotState.getInstance();
   private final Leds leds = Leds.getInstance();
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(10);
@@ -76,8 +77,10 @@ public class RobotContainer {
   private final Elevator elevator;
   private final Manipulator manipulator;
   private final Climber climber;
+  private final LoggedNetworkNumber outtakeSpeedL4 =
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocityL4", 25);
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 25);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 20);
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
@@ -233,15 +236,35 @@ public class RobotContainer {
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
-    controller.rightTrigger().whileTrue(manipulator.runVelocity(() -> outtakeSpeed.get()));
-    controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
+    controller
+        .rightTrigger()
+        .whileTrue(
+            Commands.either(
+                manipulator.runVelocity(
+                    () ->
+                        switch (autoScoreReefLevel) {
+                          case L4 -> outtakeSpeedL4.get();
+                          default -> outtakeSpeed.get();
+                        }),
+                manipulator.autoIntake(),
+                manipulator.haveAGamePiece()));
+
+    controller
+        .leftTrigger()
+        .whileTrue(elevator.intakeHeight())
+        .onTrue(Commands.runOnce(() -> leds.isIntaking = true))
+        .onFalse(Commands.runOnce(() -> leds.isIntaking = false));
     // Todo: this is where we add LEDs
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
     buttonBoard
         .l1()
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L1)); // 18
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L1;
+                })); // 18
     // L2
     buttonBoard
         .l2()
@@ -302,7 +325,12 @@ public class RobotContainer {
                         () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
                         () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
                         () -> angularSlewRateLimiter.calculate(-controller.getRightX()))
-                    .alongWith(Commands.runOnce(() -> Leds.getInstance().autoScoring = true))
+                    .alongWith(
+                        Commands.runOnce(
+                            () -> {
+                              leds.autoScoringLevel = autoScoreReefLevel;
+                              Leds.getInstance().autoScoring = true;
+                            }))
                     .andThen(Commands.runOnce(() -> Leds.getInstance().autoScoring = false)),
                 DriveCommands
                     .joystickDriveAtAngle( // if don't have a game piece, lock to coral station
@@ -320,8 +348,17 @@ public class RobotContainer {
                                 FieldConstants.CoralStation.rightCenterFace.getRotation());
                           else return robotState.getEstimatedPose().getRotation();
                         }),
-                manipulator.haveAGamePiece()));
-    manipulator.funnelTof().onTrue(manipulator.autoIntake());
+                manipulator
+                    .haveAGamePiece()
+                    .onTrue(Commands.runOnce(() -> Leds.getInstance().coralGrabbed = true))
+                    .onFalse(Commands.runOnce(() -> Leds.getInstance().coralGrabbed = false))));
+  }
+
+  public void runThisBeforeTele() {
+    manipulator
+        .funnelTof()
+        .onTrue(manipulator.autoIntake().alongWith(Commands.runOnce(() -> leds.isIntaking = true)))
+        .onFalse(Commands.runOnce(() -> leds.isIntaking = false));
   }
 
   /**
@@ -335,11 +372,10 @@ public class RobotContainer {
     // return AutoBuilder.buildAuto("P2 first part").andThen(AutoBuilder.buildAuto("P2 second
     // part"));
     PathPlannerAuto auto = autoChooser.get();
-    Command autoCommand =
-        vision
-            .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
-            .alongWith(climber.setPosition(() -> -.049))
-            .andThen(auto.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming));
+
+    if (hasRunAutoOnceBefore) auto = new PathPlannerAuto(autoChooser.get().getName());
+
+    hasRunAutoOnceBefore = true;
     if (takeSnapshot.get() || DriverStation.isFMSAttached()) {
       return vision
           .takeSnapshot(
@@ -349,9 +385,16 @@ public class RobotContainer {
                       + DriverStation.getMatchNumber()
                       + " "
                       + DriverStation.getRawAllianceStation())
-          .alongWith(autoCommand);
+          .andThen(
+              vision.seedPoseBeforeAuto(
+                  AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1)))
+          .andThen(auto)
+          .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
     }
-    return autoCommand;
+    return vision
+        .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
+        .andThen(auto)
+        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 
   public SendableChooser<PathPlannerAuto> buildAutoChooser(String defaultAutoName) {

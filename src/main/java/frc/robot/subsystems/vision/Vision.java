@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.util.TimedSubsystem;
 import java.util.HashMap;
@@ -182,7 +183,11 @@ public class Vision extends TimedSubsystem {
     Logger.recordOutput(
         "Vision/Summary/TxTyObservations",
         allTxTyObservations.values().toArray(new RobotState.TxTyObservation[0]));
-
+    if (!allTagPoses.isEmpty()) {
+      Leds.getInstance().canSeeAprilTag = true;
+    } else {
+      Leds.getInstance().canSeeAprilTag = false;
+    }
     allTxTyObservations.values().forEach(RobotState.getInstance()::addTxTyObservation);
   }
 

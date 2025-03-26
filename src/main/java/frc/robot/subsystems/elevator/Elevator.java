@@ -32,7 +32,7 @@ public class Elevator extends TimedSubsystem {
       new Alert("Elevator follower motor disconnected!", Alert.AlertType.kWarning);
 
   private final LoggedNetworkBoolean coastOverride =
-      new LoggedNetworkBoolean(KEY + "/CoastOverride");
+      new LoggedNetworkBoolean(KEY + "/CoastOverride", false);
   private final LoggedTunableNumber intakeHeight =
       new LoggedTunableNumber("Elevator/intakeHeight", 0.1);
   private final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP", 1);
@@ -139,7 +139,7 @@ public class Elevator extends TimedSubsystem {
   }
 
   public Command intakeHeightBlocking() {
-    return setPositionBlocking(intakeHeight, Seconds.of(10));
+    return setPositionBlocking(intakeHeight, 20, Seconds.of(10));
   }
 
   @Override
@@ -148,9 +148,9 @@ public class Elevator extends TimedSubsystem {
     Logger.processInputs(KEY, inputs);
     leaderDisconnectedAlert.set(!inputs.leaderConnected);
     followerDisconnectedAlert.set(!inputs.followerConnected);
-    if (inputs.leaderTorqueCurrent < -15 && inputs.velocity == 0) {
-      seedPosition(() -> inputs.reference);
-    }
+    //    if (inputs.leaderTorqueCurrent < -15 && inputs.velocity == 0) {
+    //      seedPosition(() -> inputs.reference);
+    //    }
 
     if (kP.hasChanged(hashCode())
         || kI.hasChanged(hashCode())

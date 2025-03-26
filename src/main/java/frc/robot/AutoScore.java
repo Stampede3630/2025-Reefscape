@@ -105,7 +105,7 @@ public class AutoScore {
               //                      return AllianceFlipUtil.apply(goalPose);
             },
             robot);
-    return driveToPose.until(driveToPose::atGoal);
+    return driveToPose.until(driveToPose::atGoal).withTimeout(10);
   }
 
   public static Command getAutoDrive(
