@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.units.measure.Distance;
@@ -36,6 +37,7 @@ public class Vision extends TimedSubsystem {
   private final Alert[] disconnectedAlerts;
   private final LoggedNetworkBoolean useMt1 =
       new LoggedNetworkBoolean("Vision/Use MegaTag 1", true);
+  private final Debouncer debouncer = new Debouncer(0.1, Debouncer.DebounceType.kFalling);
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     super("Vision");
@@ -183,7 +185,7 @@ public class Vision extends TimedSubsystem {
     Logger.recordOutput(
         "Vision/Summary/TxTyObservations",
         allTxTyObservations.values().toArray(new RobotState.TxTyObservation[0]));
-    Leds.getInstance().canSeeAprilTag = !allTagPoses.isEmpty();
+    Leds.getInstance().canSeeAprilTag = debouncer.calculate(!allTagPoses.isEmpty());
     allTxTyObservations.values().forEach(RobotState.getInstance()::addTxTyObservation);
   }
 
