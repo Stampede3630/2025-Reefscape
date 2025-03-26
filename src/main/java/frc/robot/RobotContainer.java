@@ -80,7 +80,7 @@ public class RobotContainer {
   private final LoggedNetworkNumber outtakeSpeedL4 =
       new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocityL4", 25);
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 20);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 15);
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
@@ -305,11 +305,11 @@ public class RobotContainer {
                                 robotState.getEstimatedPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    // controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
-    // controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
+    controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
+    controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
-    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
-    controller.povRight().whileTrue(climber.setPosition(() -> -.049));
+    //    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
+    //    controller.povRight().whileTrue(climber.setPosition(() -> -.049));
 
     controller
         .rightBumper()
@@ -350,7 +350,11 @@ public class RobotContainer {
                         }),
                 manipulator
                     .haveAGamePiece()
-                    .onTrue(Commands.runOnce(() -> Leds.getInstance().coralGrabbed = true))
+                    .onTrue(
+                        Commands.runOnce(() -> Leds.getInstance().coralGrabbed = true)
+                            .andThen(Commands.waitSeconds(1))
+                            .andThen(
+                                Commands.runOnce(() -> Leds.getInstance().coralGrabbed = false)))
                     .onFalse(Commands.runOnce(() -> Leds.getInstance().coralGrabbed = false))));
   }
 

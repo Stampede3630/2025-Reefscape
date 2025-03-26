@@ -136,7 +136,7 @@
           },
           {
             "title": "Manipulator",
-            "x": 1408.0,
+            "x": 1280.0,
             "y": 128.0,
             "width": 256.0,
             "height": 256.0,
@@ -168,6 +168,20 @@
                 "type": "Text Display",
                 "properties": {
                   "topic": "SmartDashboard/Manipulator/outtakeVelocity",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "outtakeVelocityL4",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "SmartDashboard/Manipulator/outtakeVelocityL4",
                   "period": 0.06,
                   "data_type": "double",
                   "show_submit_button": true

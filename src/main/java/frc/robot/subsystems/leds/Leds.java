@@ -71,6 +71,7 @@ public class Leds extends TimedSubsystem {
   private double lastEnabledTime = 0.0;
   private boolean estopped = false;
   public boolean isIntaking = false;
+  private int initialLoopCycleCount = 0;
 
   private Leds() {
     super("LEDs");
@@ -142,26 +143,8 @@ public class Leds extends TimedSubsystem {
     if (estopped) {
       solid(fullSection, Color.kRed);
     } else if (DriverStation.isDisabled()) {
-      /* if (lastEnabledAuto && Timer.getTimestamp() - lastEnabledTime < autoFadeMaxTime) {
-        // Auto fade
-        wave(
-            new Section(
-                0,
-                (int) (length * (1 - ((Timer.getTimestamp() - lastEnabledTime) / autoFadeTime)))),
-            Color.kGold,
-            Color.kDarkBlue,
-            waveFastCycleLength,
-            waveFastDuration);
-      } */ if (lowBatteryAlert) {
-        // Low battery
-        solid(fullSection, Color.kBlack);
-      } else if (canSeeAprilTag) {
-        wave(
-            fullSection,
-            disabledColor,
-            Color.kDeepPink,
-            waveDisabledCycleLength,
-            waveDisabledDuration);
+      if (canSeeAprilTag) {
+        solid(fullSection, Color.kDeepPink);
       } else {
         // Default pattern
         wave(
@@ -184,20 +167,15 @@ public class Leds extends TimedSubsystem {
         solid(fullSection, Color.kAqua);
       }
     } else { // in tele
-      solid(topSection, hexColor);
-      solid(bottomSection, secondaryHexColor);
-
-      // Auto scoring reef
-      if (autoScoring) {
-        solid(
-            fullSection,
-            switch (autoScoringLevel) {
-              case L1 -> l1PriorityColor;
-              case L2 -> l2PriorityColor;
-              case L3 -> l3PriorityColor;
-              case L4 -> l4PriorityColor;
-            });
-      }
+      solid(
+          fullSection,
+          switch (autoScoringLevel) {
+            case L1 -> l1PriorityColor;
+            case L2 -> l2PriorityColor;
+            case L3 -> l3PriorityColor;
+            case L4 -> l4PriorityColor;
+            default -> Color.kBlack;
+          });
 
       // Climbing alert
       if (climbing) {
@@ -206,16 +184,7 @@ public class Leds extends TimedSubsystem {
 
       // Coral grab alert
       if (coralGrabbed) {
-        solid(topSection, Color.kDeepPink);
-        solid(
-            bottomSection,
-            switch (autoScoringLevel) {
-              case L1 -> l1PriorityColor;
-              case L2 -> l2PriorityColor;
-              case L3 -> l3PriorityColor;
-              case L4 -> l4PriorityColor;
-              default -> Color.kBlack;
-            });
+        strobe(fullSection, Color.kBlueViolet, Color.kBlanchedAlmond, strobeDuration);
       }
 
       if (isIntaking) {

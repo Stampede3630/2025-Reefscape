@@ -183,11 +183,7 @@ public class Vision extends TimedSubsystem {
     Logger.recordOutput(
         "Vision/Summary/TxTyObservations",
         allTxTyObservations.values().toArray(new RobotState.TxTyObservation[0]));
-    if (!allTagPoses.isEmpty()) {
-      Leds.getInstance().canSeeAprilTag = true;
-    } else {
-      Leds.getInstance().canSeeAprilTag = false;
-    }
+    Leds.getInstance().canSeeAprilTag = !allTagPoses.isEmpty();
     allTxTyObservations.values().forEach(RobotState.getInstance()::addTxTyObservation);
   }
 
