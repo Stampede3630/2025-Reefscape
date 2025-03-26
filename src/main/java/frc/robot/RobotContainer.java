@@ -77,7 +77,7 @@ public class RobotContainer {
   private final Manipulator manipulator;
   private final Climber climber;
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 15);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 25);
   private final LoggedNetworkNumber intakeSpeed =
       new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
