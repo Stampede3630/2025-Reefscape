@@ -56,8 +56,8 @@ public class DriveToPose extends Command {
   private static final LoggedTunableNumber ffMaxRadius =
       new LoggedTunableNumber("DriveToPose/FFMaxRadius");
 
-    private Debouncer isStuckDebouncer = new Debouncer(0.1);
-    private Debouncer isAtGoalDebouncer = new Debouncer(0.1);
+  private Debouncer isStuckDebouncer = new Debouncer(0.1);
+  private Debouncer isAtGoalDebouncer = new Debouncer(0.1);
 
   static {
     drivekP.initDefault(1.2);
