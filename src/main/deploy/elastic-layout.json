@@ -188,6 +188,53 @@
                 }
               }
             ]
+          },
+          {
+            "title": "Elevator",
+            "x": 1408.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "mmKa",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Slider",
+                "properties": {
+                  "topic": "/Tuning/Elevator/mmKa",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": 0.03,
+                  "max_value": 0.2,
+                  "divisions": 5,
+                  "update_continuously": true
+                }
+              },
+              {
+                "title": "mmKv",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Number Slider",
+                "properties": {
+                  "topic": "/Tuning/Elevator/mmKv",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "min_value": 0.03,
+                  "max_value": 0.2,
+                  "divisions": 5,
+                  "update_continuously": true
+                }
+              }
+            ]
           }
         ],
         "containers": [
@@ -226,24 +273,10 @@
             }
           },
           {
-            "title": "ManipulatorTofDistance",
-            "x": 1024.0,
-            "y": 384.0,
-            "width": 128.0,
-            "height": 128.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "/AdvantageKit/Manipulator/ManipulatorTofDistance",
-              "period": 0.06,
-              "data_type": "double",
-              "show_submit_button": false
-            }
-          },
-          {
             "title": "IsStuck",
             "x": 896.0,
             "y": 128.0,
-            "width": 256.0,
+            "width": 384.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -260,8 +293,8 @@
             "title": "AtGoal",
             "x": 896.0,
             "y": 256.0,
-            "width": 256.0,
-            "height": 128.0,
+            "width": 384.0,
+            "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/DriveToPose/AtGoal",

@@ -52,8 +52,6 @@ public class Elevator extends TimedSubsystem {
   private final LoggedTunableNumber kVDown = new LoggedTunableNumber("Elevator/kVDown", .1);
   private final LoggedTunableNumber kADown = new LoggedTunableNumber("Elevator/kADown", 0);
   private final LoggedTunableNumber kIDown = new LoggedTunableNumber("Elevator/kIDown", 0.005);
-  private final LoggedTunableNumber mmKaDown = new LoggedTunableNumber("Elevator/mmKaDown", 0.1);
-  private final LoggedTunableNumber mmKvDown = new LoggedTunableNumber("Elevator/mmKvDown", 0.075);
   private final Debouncer elevatorResetDebouncer = new Debouncer(1);
   @AutoLogOutput private boolean coastModeEnabled = true;
   private double setpoint = -1;
