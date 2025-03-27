@@ -305,11 +305,11 @@ public class RobotContainer {
                                 robotState.getEstimatedPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -.049));
+    controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -.066));
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
 
     //    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
-    //    controller.povRight().whileTrue(climber.setPosition(() -> -.049));
+    //    controller.povRight().whileTrue(climber.setPosition(() -> -.066));
 
     controller
         .rightBumper()
@@ -393,13 +393,13 @@ public class RobotContainer {
               vision.seedPoseBeforeAuto(
                   AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1)))
           .andThen(auto)
-          .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.049))
+          .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.066))
           .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
     }
     return vision
         .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
         .andThen(auto)
-        .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.049))
+        .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.066))
         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 

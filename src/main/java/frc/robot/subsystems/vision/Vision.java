@@ -227,13 +227,15 @@ public class Vision extends TimedSubsystem {
                 bestObservation = observation;
             }
           if (bestObservation.tagCount() > 1
-              || (ppStartingPose != null && bestObservation
-                      .pose()
-                      .toPose2d()
-                      .getTranslation()
-                      .getDistance(ppStartingPose.getTranslation())
-                  < threshold.in(
-                      Meters))) { // if MT1 indicates we are less than threshold meters away from PP
+              || (ppStartingPose != null
+                  && bestObservation
+                          .pose()
+                          .toPose2d()
+                          .getTranslation()
+                          .getDistance(ppStartingPose.getTranslation())
+                      < threshold.in(
+                          Meters))) { // if MT1 indicates we are less than threshold meters away
+            // from PP
             // pose OR if we have two tags, seed with vision
             RobotState.getInstance().resetPose(bestObservation.pose().toPose2d());
           } else if (ppStartingPose != null) RobotState.getInstance().resetPose(ppStartingPose);
