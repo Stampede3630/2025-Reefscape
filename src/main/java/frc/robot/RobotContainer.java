@@ -306,7 +306,12 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
     controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -.066));
-    controller.povRight().whileTrue(elevator.setPosition(() -> FieldConstants.ReefLevel.L1.height).andThen(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get())));
+    controller
+        .povRight()
+        .whileTrue(
+            elevator
+                .setPosition(() -> FieldConstants.ReefLevel.L1.height)
+                .andThen(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get())));
 
     //    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
     //    controller.povRight().whileTrue(climber.setPosition(() -> -.066));
