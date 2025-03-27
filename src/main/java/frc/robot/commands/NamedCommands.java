@@ -81,6 +81,7 @@ public class NamedCommands {
         .alongWith(
             AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()))
         .andThen(elevator.setPositionBlocking(elevHeight, Seconds.of(1.5)))
+        .andThen(Commands.waitSeconds(0.5))
         .andThen(manipulator.outtake(() -> 10))
         .andThen(elevator.intakeHeightBlocking());
   }
