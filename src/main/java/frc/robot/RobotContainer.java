@@ -40,7 +40,6 @@ import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.manipulator.Manipulator;
 import frc.robot.subsystems.manipulator.ManipulatorIO;
 import frc.robot.subsystems.manipulator.ManipulatorIOTalonFX;
-import frc.robot.subsystems.vision.FindCameraOffset;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -115,7 +114,8 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         vision =
             new Vision(
-                new FindCameraOffset(), // switch this out for FindCameraOffset when seeding
+                RobotState.getInstance()
+                    ::addVisionObservation, // switch this out for FindCameraOffset when seeding
                 // camera offsets.
                 new VisionIOLimelight(limelightPose, camera0Name, robotState::getRotation));
         elevator = new Elevator(new ElevatorIOTalonFX());
@@ -393,11 +393,13 @@ public class RobotContainer {
               vision.seedPoseBeforeAuto(
                   AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1)))
           .andThen(auto)
+          .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.049))
           .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
     }
     return vision
         .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
         .andThen(auto)
+        .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.049))
         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 

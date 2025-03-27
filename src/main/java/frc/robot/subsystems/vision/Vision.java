@@ -157,8 +157,7 @@ public class Vision extends TimedSubsystem {
         //        }
 
         // Send vision observation
-        if (observation.type() == PoseObservationType.MEGATAG_1)
-          consumer.accept(visionObservation);
+        consumer.accept(visionObservation);
       }
 
       // Log camera datadata
