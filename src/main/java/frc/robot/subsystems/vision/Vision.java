@@ -201,7 +201,6 @@ public class Vision extends TimedSubsystem {
       }
       hasSetThrottle = false;
     }
-
   }
 
   public Command takeSnapshot(Supplier<String> name) {
