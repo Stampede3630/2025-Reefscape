@@ -13,7 +13,9 @@ import frc.robot.RobotState;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface VisionIO {
-  default void updateInputs(VisionIOInputs inputs) {}
+    default void setThrottle(int n) {}
+
+    default void updateInputs(VisionIOInputs inputs) {}
 
   enum PoseObservationType {
     MEGATAG_1,

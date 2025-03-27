@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
 import frc.robot.subsystems.leds.Leds;
@@ -38,6 +39,7 @@ public class Vision extends TimedSubsystem {
   private final LoggedNetworkBoolean useMt1 =
       new LoggedNetworkBoolean("Vision/Use MegaTag 1", true);
   private final Debouncer debouncer = new Debouncer(0.1, Debouncer.DebounceType.kFalling);
+  private boolean hasSetThrottle = false;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     super("Vision");
@@ -187,6 +189,19 @@ public class Vision extends TimedSubsystem {
         allTxTyObservations.values().toArray(new RobotState.TxTyObservation[0]));
     Leds.getInstance().canSeeAprilTag = debouncer.calculate(!allTagPoses.isEmpty());
     allTxTyObservations.values().forEach(RobotState.getInstance()::addTxTyObservation);
+
+    if (DriverStation.isDisabled() && !hasSetThrottle) {
+      for (VisionIO visionIO : io) {
+        visionIO.setThrottle(200);
+      }
+      hasSetThrottle = true;
+    } else if (DriverStation.isEnabled() && hasSetThrottle) {
+      for (VisionIO visionIO : io) {
+        visionIO.setThrottle(0);
+      }
+      hasSetThrottle = false;
+    }
+
   }
 
   public Command takeSnapshot(Supplier<String> name) {
