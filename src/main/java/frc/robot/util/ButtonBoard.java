@@ -7,26 +7,24 @@
 
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.HashMap;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class ButtonBoard extends CommandXboxController {
 
-  private String name;
-  private final LoggedNetworkBoolean a = new LoggedNetworkBoolean(name + "/A");
-  private final LoggedNetworkBoolean b = new LoggedNetworkBoolean(name + "/B");
-  private final LoggedNetworkBoolean x = new LoggedNetworkBoolean(name + "/X");
-  private final LoggedNetworkBoolean y = new LoggedNetworkBoolean(name + "/Y");
-  private final LoggedNetworkBoolean leftBumper = new LoggedNetworkBoolean(name + "/LeftBumper");
-  private final LoggedNetworkBoolean rightBumper = new LoggedNetworkBoolean(name + "/RightBumper");
-  private final LoggedNetworkBoolean back = new LoggedNetworkBoolean(name + "/Back");
-  private final LoggedNetworkBoolean start = new LoggedNetworkBoolean(name + "/Start");
-  private final LoggedNetworkBoolean leftStick = new LoggedNetworkBoolean(name + "/LeftStick");
-  private final LoggedNetworkBoolean rightStick = new LoggedNetworkBoolean(name + "/RightStick");
+  private final Trigger[] buttonTriggers = new Trigger[12];
+  private final LoggedNetworkBoolean[] buttons = new LoggedNetworkBoolean[12];
+  private final LoggedNetworkBoolean l1;
+  private final LoggedNetworkBoolean l2;
+  private final LoggedNetworkBoolean l3;
+  private final LoggedNetworkBoolean l4;
+  private final String name;
+
+  private HashMap<ButtonLoop, Trigger> map = new HashMap<>();
 
   /**
    * Construct an instance of a controller.
@@ -45,186 +43,92 @@ public class ButtonBoard extends CommandXboxController {
   public ButtonBoard(int port, String name) {
     super(port);
     this.name = name;
+    for (int i = 0; i < 12; i++) {
+      int finalI = i;
+      buttons[i] = new LoggedNetworkBoolean(name + "/" + (i + 1), false);
+      buttonTriggers[i] =
+          new Trigger(() -> buttons[finalI].get())
+              .onTrue(
+                  Commands.either(
+                      Commands.none(),
+                      Commands.waitSeconds(0.02)
+                          .andThen(
+                              Commands.runOnce(() -> buttons[finalI].set(false))
+                                  .ignoringDisable(true)),
+                      () -> super.button(finalI + 1).getAsBoolean()));
+    }
+    l1 = new LoggedNetworkBoolean(name + "/L1", false);
+    l2 = new LoggedNetworkBoolean(name + "/L2", false);
+    l3 = new LoggedNetworkBoolean(name + "/L3", false);
+    l4 = new LoggedNetworkBoolean(name + "/L4", false);
   }
 
-  @Override
-  public XboxController getHID() {
-    return super.getHID();
-  }
+  public record ButtonLoop(int button, EventLoop loop) {}
 
   @Override
-  public Trigger a() {
-    return super.a().or(a::get).onTrue(Commands.runOnce(() -> a.set(false)));
+  public Trigger button(int button, EventLoop loop) {
+    if (map.containsKey(new ButtonLoop(button, loop))) {
+      return map.get(new ButtonLoop(button, loop));
+    } else {
+      map.put(
+          new ButtonLoop(button, loop),
+          super.button(button, loop)
+              .onTrue(Commands.runOnce(() -> buttons[button - 1].set(true)).ignoringDisable(true))
+              .onFalse(Commands.runOnce(() -> buttons[button - 1].set(false)).ignoringDisable(true))
+              .or(buttonTriggers[button - 1]));
+    }
+    return map.get(new ButtonLoop(button, loop));
   }
 
-  @Override
-  public Trigger a(EventLoop loop) {
-    return super.a(loop).or(a::get).onTrue(Commands.runOnce(() -> a.set(false)));
+  public Trigger l1() {
+    return super.axisGreaterThan(0, .9)
+        .onTrue(Commands.runOnce(() -> l1.set(true)).ignoringDisable(true))
+        .onFalse(Commands.runOnce(() -> l1.set(false)).ignoringDisable(true))
+        .or(l1::get)
+        .onTrue(
+            Commands.either(
+                Commands.none(),
+                Commands.waitSeconds(0.02)
+                    .andThen(Commands.runOnce(() -> l1.set(false)).ignoringDisable(true)),
+                () -> super.axisGreaterThan(0, .9).getAsBoolean()));
   }
 
-  @Override
-  public Trigger b() {
-    return super.b().or(b::get).onTrue(Commands.runOnce(() -> b.set(false)));
+  public Trigger l2() {
+    return super.axisLessThan(1, -.9)
+        .onTrue(Commands.runOnce(() -> l2.set(true)).ignoringDisable(true))
+        .onFalse(Commands.runOnce(() -> l2.set(false)).ignoringDisable(true))
+        .or(l2::get)
+        .onTrue(
+            Commands.either(
+                Commands.none(),
+                Commands.waitSeconds(0.02)
+                    .andThen(Commands.runOnce(() -> l2.set(false)).ignoringDisable(true)),
+                () -> super.axisLessThan(1, -.9).getAsBoolean()));
   }
 
-  @Override
-  public Trigger b(EventLoop loop) {
-    return super.b(loop).or(b::get).onTrue(Commands.runOnce(() -> b.set(false)));
+  public Trigger l3() {
+    return super.axisLessThan(0, -.9)
+        .onTrue(Commands.runOnce(() -> l3.set(true)).ignoringDisable(true))
+        .onFalse(Commands.runOnce(() -> l3.set(false)).ignoringDisable(true))
+        .or(l3::get)
+        .onTrue(
+            Commands.either(
+                Commands.none(),
+                Commands.waitSeconds(0.02)
+                    .andThen(Commands.runOnce(() -> l3.set(false)).ignoringDisable(true)),
+                () -> super.axisLessThan(0, -.9).getAsBoolean()));
   }
 
-  @Override
-  public Trigger x() {
-    return super.x().or(x::get).onTrue(Commands.runOnce(() -> x.set(false)));
-  }
-
-  @Override
-  public Trigger x(EventLoop loop) {
-    return super.x(loop).or(x::get).onTrue(Commands.runOnce(() -> x.set(false)));
-  }
-
-  @Override
-  public Trigger y() {
-    return super.y().or(y::get).onTrue(Commands.runOnce(() -> y.set(false)));
-  }
-
-  @Override
-  public Trigger y(EventLoop loop) {
-    return super.y(loop).or(y::get).onTrue(Commands.runOnce(() -> y.set(false)));
-  }
-
-  @Override
-  public Trigger leftBumper() {
-    return super.leftBumper()
-        .or(leftBumper::get)
-        .onTrue(Commands.runOnce(() -> leftBumper.set(false)));
-  }
-
-  @Override
-  public Trigger leftBumper(EventLoop loop) {
-    return super.leftBumper(loop)
-        .or(leftBumper::get)
-        .onTrue(Commands.runOnce(() -> leftBumper.set(false)));
-  }
-
-  @Override
-  public Trigger rightBumper() {
-    return super.rightBumper()
-        .or(rightBumper::get)
-        .onTrue(Commands.runOnce(() -> rightBumper.set(false)));
-  }
-
-  @Override
-  public Trigger rightBumper(EventLoop loop) {
-    return super.rightBumper(loop)
-        .or(rightBumper::get)
-        .onTrue(Commands.runOnce(() -> rightBumper.set(false)));
-  }
-
-  @Override
-  public Trigger back() {
-    return super.back().or(back::get).onTrue(Commands.runOnce(() -> back.set(false)));
-  }
-
-  @Override
-  public Trigger back(EventLoop loop) {
-    return super.back(loop).or(back::get).onTrue(Commands.runOnce(() -> back.set(false)));
-  }
-
-  @Override
-  public Trigger start() {
-    return super.start().or(start::get).onTrue(Commands.runOnce(() -> start.set(false)));
-  }
-
-  @Override
-  public Trigger start(EventLoop loop) {
-    return super.start(loop).or(start::get).onTrue(Commands.runOnce(() -> start.set(false)));
-  }
-
-  @Override
-  public Trigger leftStick() {
-    return super.leftStick()
-        .or(leftStick::get)
-        .onTrue(Commands.runOnce(() -> leftStick.set(false)));
-  }
-
-  @Override
-  public Trigger leftStick(EventLoop loop) {
-    return super.leftStick(loop)
-        .or(leftStick::get)
-        .onTrue(Commands.runOnce(() -> leftStick.set(false)));
-  }
-
-  @Override
-  public Trigger rightStick() {
-    return super.rightStick()
-        .or(rightStick::get)
-        .onTrue(Commands.runOnce(() -> rightStick.set(false)));
-  }
-
-  @Override
-  public Trigger rightStick(EventLoop loop) {
-    return super.rightStick(loop)
-        .or(rightStick::get)
-        .onTrue(Commands.runOnce(() -> rightStick.set(false)));
-  }
-
-  @Override
-  public Trigger leftTrigger(double threshold, EventLoop loop) {
-    return super.leftTrigger(threshold, loop);
-  }
-
-  @Override
-  public Trigger leftTrigger(double threshold) {
-    return super.leftTrigger(threshold);
-  }
-
-  @Override
-  public Trigger leftTrigger() {
-    return super.leftTrigger();
-  }
-
-  @Override
-  public Trigger rightTrigger(double threshold, EventLoop loop) {
-    return super.rightTrigger(threshold, loop);
-  }
-
-  @Override
-  public Trigger rightTrigger(double threshold) {
-    return super.rightTrigger(threshold);
-  }
-
-  @Override
-  public Trigger rightTrigger() {
-    return super.rightTrigger();
-  }
-
-  @Override
-  public double getLeftX() {
-    return super.getLeftX();
-  }
-
-  @Override
-  public double getRightX() {
-    return super.getRightX();
-  }
-
-  @Override
-  public double getLeftY() {
-    return super.getLeftY();
-  }
-
-  @Override
-  public double getRightY() {
-    return super.getRightY();
-  }
-
-  @Override
-  public double getLeftTriggerAxis() {
-    return super.getLeftTriggerAxis();
-  }
-
-  @Override
-  public double getRightTriggerAxis() {
-    return super.getRightTriggerAxis();
+  public Trigger l4() {
+    return super.axisGreaterThan(1, .9)
+        .onTrue(Commands.runOnce(() -> l4.set(true)).ignoringDisable(true))
+        .onFalse(Commands.runOnce(() -> l4.set(false)).ignoringDisable(true))
+        .or(l4::get)
+        .onTrue(
+            Commands.either(
+                Commands.none(),
+                Commands.waitSeconds(0.02)
+                    .andThen(Commands.runOnce(() -> l4.set(false)).ignoringDisable(true)),
+                () -> super.axisGreaterThan(1, .9).getAsBoolean()));
   }
 }

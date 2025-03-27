@@ -54,7 +54,7 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     config
         .withMotorOutput(
             new MotorOutputConfigs()
-                .withInverted(InvertedValue.Clockwise_Positive) // Verified 2/11 CL
+                .withInverted(InvertedValue.CounterClockwise_Positive)
                 .withNeutralMode(NeutralModeValue.Brake))
         .withSlot0(new Slot0Configs().withKS(70).withKV(0).withKA(0).withKP(10).withKI(10));
 
@@ -68,6 +68,7 @@ public class ManipulatorIOTalonFX implements ManipulatorIO, HasTalonFX {
     manipulatorTofDistance = manipulatorTof.getDistance();
     funnelTofDistance = funnelTof.getDistance();
 
+    motor.getConfigurator().apply(config);
     BaseStatusSignal.setUpdateFrequencyForAll(
         Constants.kImportantUpdateRate, manipulatorTofDistance, funnelTofDistance);
     ParentDevice.optimizeBusUtilizationForAll(manipulatorTof);

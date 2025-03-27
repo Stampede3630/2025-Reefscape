@@ -7,7 +7,7 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Inches;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -32,9 +32,9 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class AutoScore {
   public static final LoggedNetworkNumber xOffset =
-      new LoggedNetworkNumber("AutoScore/xOffsetInches", 20);
+      new LoggedNetworkNumber("SmartDashboard/AutoScore/xOffsetInches", 19.62);
   public static final LoggedNetworkNumber yOffset =
-      new LoggedNetworkNumber("AutoScore/yOffsetInches", -4.5);
+      new LoggedNetworkNumber("SmartDashboard/AutoScore/yOffsetInches", -.49);
   public static final LoggedTunableNumber minDistanceReefClearAlgae =
       new LoggedTunableNumber("AutoScore/MinDistanceReefClearAlgae", Units.inchesToMeters(18.0));
   public static final LoggedTunableNumber minDistanceReefClear =
@@ -105,7 +105,7 @@ public class AutoScore {
               //                      return AllianceFlipUtil.apply(goalPose);
             },
             robot);
-    return driveToPose.until(driveToPose::atGoal);
+    return driveToPose.until(driveToPose::atGoal).withTimeout(10);
   }
 
   public static Command getAutoDrive(

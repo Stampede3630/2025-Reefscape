@@ -7,28 +7,42 @@
 
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.util.TimedSubsystem;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-public class Vision extends SubsystemBase {
+public class Vision extends TimedSubsystem {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
+  private final LoggedNetworkBoolean useMt1 =
+      new LoggedNetworkBoolean("Vision/Use MegaTag 1", true);
+  private final Debouncer debouncer = new Debouncer(0.1, Debouncer.DebounceType.kFalling);
+  private boolean hasSetThrottle = false;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
+    super("Vision");
     this.consumer = consumer;
     this.io = io;
 
@@ -47,7 +61,7 @@ public class Vision extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
+  public void timedPeriodic() {
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
       Logger.processInputs("Vision/Camera" + i, inputs[i]);
@@ -90,7 +104,11 @@ public class Vision extends SubsystemBase {
       for (var observation : inputs[cameraIndex].poseObservations) {
         // Check whether to reject pose
         boolean rejectPose =
-            observation.tagCount() == 0 // Must have at least one tag
+            (!useMt1.get()
+                    && observation
+                        .type()
+                        .equals(PoseObservationType.MEGATAG_1)) // MT1 is disabled and this is MT1
+                || observation.tagCount() == 0 // Must have at least one tag
                 || (observation.tagCount() == 1
                     && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
                 || Math.abs(observation.pose().getZ())
@@ -131,7 +149,7 @@ public class Vision extends SubsystemBase {
 
         RobotState.VisionObservation visionObservation =
             new RobotState.VisionObservation(
-                observation.pose().toPose2d(),
+                observation.pose(),
                 observation.timestamp(),
                 VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
         //        if (DriverStation.isDisabled()) {
@@ -169,8 +187,57 @@ public class Vision extends SubsystemBase {
     Logger.recordOutput(
         "Vision/Summary/TxTyObservations",
         allTxTyObservations.values().toArray(new RobotState.TxTyObservation[0]));
-
+    Leds.getInstance().canSeeAprilTag = debouncer.calculate(!allTagPoses.isEmpty());
     allTxTyObservations.values().forEach(RobotState.getInstance()::addTxTyObservation);
+
+    if (DriverStation.isDisabled() && !hasSetThrottle) {
+      for (VisionIO visionIO : io) {
+        visionIO.setThrottle(200);
+      }
+      hasSetThrottle = true;
+    } else if (DriverStation.isEnabled() && hasSetThrottle) {
+      for (VisionIO visionIO : io) {
+        visionIO.setThrottle(0);
+      }
+      hasSetThrottle = false;
+    }
+  }
+
+  public Command takeSnapshot(Supplier<String> name) {
+    return runOnce(
+        () -> {
+          for (VisionIO x : io) {
+            if (x instanceof VisionIOLimelight) {
+              ((VisionIOLimelight) x).takeSnapshot(name.get());
+            }
+          }
+        });
+  }
+
+  public Command seedPoseBeforeAuto(Pose2d ppStartingPose, Distance threshold) {
+    return runOnce(
+        () -> {
+          VisionIO.PoseObservation bestObservation =
+              new VisionIO.PoseObservation(
+                  0, Pose3d.kZero, 1000, 0, 0, PoseObservationType.MEGATAG_1);
+          for (VisionIOInputsAutoLogged input : inputs)
+            for (var observation : input.poseObservations) {
+              if (observation.type().equals(PoseObservationType.MEGATAG_1)
+                  && observation.ambiguity() < bestObservation.ambiguity())
+                bestObservation = observation;
+            }
+          if (bestObservation.tagCount() > 1
+              || bestObservation
+                      .pose()
+                      .toPose2d()
+                      .getTranslation()
+                      .getDistance(ppStartingPose.getTranslation())
+                  < threshold.in(
+                      Meters)) { // if MT1 indicates we are less than threshold meters away from PP
+            // pose OR if we have two tags, seed with vision
+            RobotState.getInstance().resetPose(bestObservation.pose().toPose2d());
+          } else RobotState.getInstance().resetPose(ppStartingPose);
+        });
   }
 
   @FunctionalInterface

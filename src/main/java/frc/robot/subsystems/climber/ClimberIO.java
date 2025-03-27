@@ -12,6 +12,8 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ClimberIO {
   default void updateInputs(ClimberIOInputs inputs) {}
 
+  default void runPosition(double position) {}
+
   default void runVolts(double volts) {}
 
   default void runTorqueCurrent(double amps) {}
@@ -29,5 +31,7 @@ public interface ClimberIO {
     public double statorCurrent = 0.0;
     public double supplyCurrent = 0.0;
     public double temp = 0.0;
+    public double absolutePosition = 0.0;
+    public double encoderPosition = 0.0;
   }
 }

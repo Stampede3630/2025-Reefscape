@@ -7,16 +7,20 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
 import static frc.robot.subsystems.vision.VisionConstants.limelightPose;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -41,9 +45,12 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.ButtonBoard;
+import java.util.List;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
@@ -53,6 +60,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private boolean hasRunAutoOnceBefore = false;
   private final RobotState robotState = RobotState.getInstance();
   private final Leds leds = Leds.getInstance();
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(10);
@@ -63,24 +71,32 @@ public class RobotContainer {
   private final Vision vision;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
-  private final CommandXboxController buttonBoard = new CommandXboxController(1);
+  private final ButtonBoard buttonBoard = new ButtonBoard(1, "SmartDashboard/ButtonBoard");
   // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<PathPlannerAuto> autoChooser;
   private final Elevator elevator;
   private final Manipulator manipulator;
   private final Climber climber;
+  private final LoggedNetworkNumber outtakeSpeedL4 =
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocityL4", 25);
   private final LoggedNetworkNumber outtakeSpeed =
-      new LoggedNetworkNumber("Manipulator/outtakeVelocity", 10);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/outtakeVelocity", 18);
   private final LoggedNetworkNumber intakeSpeed =
-      new LoggedNetworkNumber("Manipulator/intakeVelocity", 10);
+      new LoggedNetworkNumber("SmartDashboard/Manipulator/intakeVelocity", 10);
   private final LoggedNetworkNumber climberTorqueCurrent =
-      new LoggedNetworkNumber("Climber/torqueCurrent", 300);
+      new LoggedNetworkNumber("SmartDashboard/Climber/torqueCurrent", 300);
   private final LoggedNetworkNumber driveTc =
-      new LoggedNetworkNumber("Drive/torqueCurrentSetpoint", 10);
-  private final LoggedNetworkNumber l1Offset = new LoggedNetworkNumber("ElevatorOffsets/L1", 0);
-  private final LoggedNetworkNumber l2Offset = new LoggedNetworkNumber("ElevatorOffsets/L2", 0);
-  private final LoggedNetworkNumber l3Offset = new LoggedNetworkNumber("ElevatorOffsets/L3", 0);
-  private final LoggedNetworkNumber l4Offset = new LoggedNetworkNumber("ElevatorOffsets/L4", 0);
+      new LoggedNetworkNumber("SmartDashboard/Drive/torqueCurrentSetpoint", 10);
+  private final LoggedNetworkNumber l1Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L1", 0);
+  private final LoggedNetworkNumber l2Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L2", 0);
+  private final LoggedNetworkNumber l3Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L3", 0);
+  private final LoggedNetworkNumber l4Offset =
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L4", 0);
+  private final LoggedNetworkBoolean takeSnapshot =
+      new LoggedNetworkBoolean("SmartDashboard/Take Snapshot before Auto", false);
   @AutoLogOutput private int autoScoreBranch = 0;
   @AutoLogOutput private FieldConstants.ReefLevel autoScoreReefLevel = FieldConstants.ReefLevel.L4;
 
@@ -98,7 +114,9 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         vision =
             new Vision(
-                RobotState.getInstance()::addVisionObservation,
+                RobotState.getInstance()
+                    ::addVisionObservation, // switch this out for FindCameraOffset when seeding
+                // camera offsets.
                 new VisionIOLimelight(limelightPose, camera0Name, robotState::getRotation));
         elevator = new Elevator(new ElevatorIOTalonFX());
         manipulator = new Manipulator(new ManipulatorIOTalonFX());
@@ -146,36 +164,40 @@ public class RobotContainer {
 
     new NamedCommands(drive, climber, elevator, manipulator, vision);
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", buildAutoChooser(""));
 
     // Set up SysId routines
     autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+        "Drive Wheel Radius Characterization",
+        new PathPlannerAuto(DriveCommands.wheelRadiusCharacterization(drive)));
     autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+        "Drive Simple FF Characterization",
+        new PathPlannerAuto(DriveCommands.feedforwardCharacterization(drive)));
     autoChooser.addOption(
         "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        new PathPlannerAuto(drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward)));
     autoChooser.addOption(
         "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        new PathPlannerAuto(drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)));
     autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        "Drive SysId (Dynamic Forward)",
+        new PathPlannerAuto(drive.sysIdDynamic(SysIdRoutine.Direction.kForward)));
     autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        "Drive SysId (Dynamic Reverse)",
+        new PathPlannerAuto(drive.sysIdDynamic(SysIdRoutine.Direction.kReverse)));
 
     autoChooser.addOption(
         "Drive SysId SPINNY(Quasistatic Forward)",
-        drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kForward));
+        new PathPlannerAuto(drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kForward)));
     autoChooser.addOption(
         "Drive SysId SPINNY(Quasistatic Reverse)",
-        drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kReverse));
+        new PathPlannerAuto(drive.sysIdSpinnyQuasistatic(SysIdRoutine.Direction.kReverse)));
     autoChooser.addOption(
         "Drive SysId SPINNY(Dynamic Forward)",
-        drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kForward));
+        new PathPlannerAuto(drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kForward)));
     autoChooser.addOption(
         "Drive SysId SPINNY(Dynamic Reverse)",
-        drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kReverse));
+        new PathPlannerAuto(drive.sysIdSpinnyDynamic(SysIdRoutine.Direction.kReverse)));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -214,26 +236,46 @@ public class RobotContainer {
     controller.povDown().whileTrue(elevator.downCommand());
 
     // MANIPULATOR
-    controller.rightTrigger().whileTrue(manipulator.runVelocity(outtakeSpeed::get));
-    controller.leftTrigger().whileTrue(elevator.intakeHeight().andThen(manipulator.autoIntake()));
+    controller
+        .rightTrigger()
+        .whileTrue(
+            Commands.either(
+                manipulator.runVelocity(
+                    () ->
+                        switch (autoScoreReefLevel) {
+                          case L4 -> outtakeSpeedL4.get();
+                          default -> outtakeSpeed.get();
+                        }),
+                manipulator.autoIntake(),
+                manipulator.haveAGamePiece()));
+
+    controller
+        .leftTrigger()
+        .whileTrue(elevator.intakeHeight())
+        .onTrue(Commands.runOnce(() -> leds.isIntaking = true))
+        .onFalse(Commands.runOnce(() -> leds.isIntaking = false));
     // Todo: this is where we add LEDs
     controller.start().whileTrue(manipulator.runVelocity(() -> -outtakeSpeed.get()));
 
     // L1
     buttonBoard
-        .axisGreaterThan(0, .90)
-        .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L1)); // 18
+        .l1()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoScoreReefLevel = FieldConstants.ReefLevel.L1;
+                })); // 18
     // L2
     buttonBoard
-        .axisLessThan(1, -.9)
+        .l2()
         .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L2)); // 18
     // L3
     buttonBoard
-        .axisLessThan(0, -.9)
+        .l3()
         .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L3)); // 34
     // L4
     buttonBoard
-        .axisGreaterThan(1, .9)
+        .l4()
         .onTrue(Commands.runOnce(() -> autoScoreReefLevel = FieldConstants.ReefLevel.L4)); // 58
 
     for (int i = 1; i < 13; i++) {
@@ -242,10 +284,11 @@ public class RobotContainer {
           .button(i)
           .onTrue(
               Commands.runOnce(
-                  () -> {
-                    autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
-                    Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
-                  }));
+                      () -> {
+                        autoScoreBranch = finalI >= 4 ? finalI - 4 : finalI + 8;
+                        Leds.getInstance().autoScoringLevel = autoScoreReefLevel;
+                      })
+                  .andThen(Commands.print("hllo")));
     }
 
     // Switch to X pattern when X button is pressed
@@ -262,8 +305,11 @@ public class RobotContainer {
                                 robotState.getEstimatedPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    controller.povLeft().whileTrue(climber.runTorqueCurrent(climberTorqueCurrent::get));
+    controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -.049));
     controller.povRight().whileTrue(climber.runTorqueCurrent(() -> -climberTorqueCurrent.get()));
+
+    //    controller.povLeft().whileTrue(climber.setPosition(() -> -.26));
+    //    controller.povRight().whileTrue(climber.setPosition(() -> -.049));
 
     controller
         .rightBumper()
@@ -279,7 +325,12 @@ public class RobotContainer {
                         () -> xSlewRateLimiter.calculate(-controller.getLeftY()),
                         () -> ySlewRateLimiter.calculate(-controller.getLeftX()),
                         () -> angularSlewRateLimiter.calculate(-controller.getRightX()))
-                    .alongWith(Commands.runOnce(() -> Leds.getInstance().autoScoring = true))
+                    .alongWith(
+                        Commands.runOnce(
+                            () -> {
+                              leds.autoScoringLevel = autoScoreReefLevel;
+                              Leds.getInstance().autoScoring = true;
+                            }))
                     .andThen(Commands.runOnce(() -> Leds.getInstance().autoScoring = false)),
                 DriveCommands
                     .joystickDriveAtAngle( // if don't have a game piece, lock to coral station
@@ -297,8 +348,21 @@ public class RobotContainer {
                                 FieldConstants.CoralStation.rightCenterFace.getRotation());
                           else return robotState.getEstimatedPose().getRotation();
                         }),
-                manipulator.haveAGamePiece()));
-    manipulator.funnelTof().onTrue(manipulator.autoIntake());
+                manipulator
+                    .haveAGamePiece()
+                    .onTrue(
+                        Commands.runOnce(() -> Leds.getInstance().coralGrabbed = true)
+                            .andThen(Commands.waitSeconds(1))
+                            .andThen(
+                                Commands.runOnce(() -> Leds.getInstance().coralGrabbed = false)))
+                    .onFalse(Commands.runOnce(() -> Leds.getInstance().coralGrabbed = false))));
+  }
+
+  public void runThisBeforeTele() {
+    manipulator
+        .funnelTof()
+        .onTrue(manipulator.autoIntake().alongWith(Commands.runOnce(() -> leds.isIntaking = true)))
+        .onFalse(Commands.runOnce(() -> leds.isIntaking = false));
   }
 
   /**
@@ -311,6 +375,55 @@ public class RobotContainer {
     // part"));
     // return AutoBuilder.buildAuto("P2 first part").andThen(AutoBuilder.buildAuto("P2 second
     // part"));
-    return autoChooser.get().withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
+    PathPlannerAuto auto = autoChooser.get();
+
+    if (hasRunAutoOnceBefore) auto = new PathPlannerAuto(autoChooser.get().getName());
+
+    hasRunAutoOnceBefore = true;
+    if (takeSnapshot.get() || DriverStation.isFMSAttached()) {
+      return vision
+          .takeSnapshot(
+              () ->
+                  DriverStation.getMatchType().toString()
+                      + " "
+                      + DriverStation.getMatchNumber()
+                      + " "
+                      + DriverStation.getRawAllianceStation())
+          .andThen(
+              vision.seedPoseBeforeAuto(
+                  AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1)))
+          .andThen(auto)
+          .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
+    }
+    return vision
+        .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
+        .andThen(auto)
+        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
+  }
+
+  public SendableChooser<PathPlannerAuto> buildAutoChooser(String defaultAutoName) {
+    SendableChooser<PathPlannerAuto> chooser = new SendableChooser<>();
+    List<String> autoNames = AutoBuilder.getAllAutoNames();
+
+    PathPlannerAuto defaultOption = null;
+
+    for (String autoName : autoNames) {
+      PathPlannerAuto auto = new PathPlannerAuto(autoName);
+
+      if (!defaultAutoName.isEmpty() && defaultAutoName.equals(autoName)) {
+        defaultOption = auto;
+      } else {
+        chooser.addOption(autoName, auto);
+      }
+    }
+
+    if (defaultOption == null) {
+      chooser.setDefaultOption("None", new PathPlannerAuto(Commands.none()));
+    } else {
+      chooser.setDefaultOption(defaultOption.getName(), defaultOption);
+      chooser.addOption("None", new PathPlannerAuto(Commands.none()));
+    }
+
+    return chooser;
   }
 }

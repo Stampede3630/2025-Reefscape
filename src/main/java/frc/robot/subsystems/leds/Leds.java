@@ -12,14 +12,12 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.FieldConstants;
-import frc.robot.util.LoggedTracer;
-import frc.robot.util.VirtualSubsystem;
+import frc.robot.util.TimedSubsystem;
 import java.util.List;
 import java.util.Optional;
 
-public class Leds extends VirtualSubsystem {
+public class Leds extends TimedSubsystem {
   // Constants
-  private static final boolean prideLeds = false;
   private static final int minLoopCycleCount = 10;
   private static final int length = 300;
   private static final Section fullSection = new Section(0, length);
@@ -39,10 +37,10 @@ public class Leds extends VirtualSubsystem {
   private static final double waveDisabledDuration = 2.0;
   private static final double autoFadeTime = 2.5; // 3s nominal
   private static final double autoFadeMaxTime = 5.0; // Return to normal
-  private static final Color l1PriorityColor = Color.kOrangeRed;
-  private static final Color l2PriorityColor = Color.kCyan;
-  private static final Color l3PriorityColor = Color.kBlue;
-  private static final Color l4PriorityColor = Color.kPurple;
+  private static final Color l1PriorityColor = Color.kBlue;
+  private static final Color l2PriorityColor = Color.kRed;
+  private static final Color l3PriorityColor = Color.kGreen;
+  private static final Color l4PriorityColor = Color.kYellow;
   private static Leds instance;
   // LED IO
   private final AddressableLED leds;
@@ -52,10 +50,8 @@ public class Leds extends VirtualSubsystem {
   public int loopCycleCount = 0;
   public boolean hpAttentionAlert = false;
   public boolean endgameAlert = false;
-  public boolean autoScoringReef = false;
+  public boolean canSeeAprilTag = false;
   public boolean autoScoring = false;
-  public boolean superstructureCoast = false;
-  public boolean superstructureEstopped = false;
   public boolean lowBatteryAlert = false;
   public boolean characterizationMode = false;
   public boolean visionDisconnected = false;
@@ -74,8 +70,11 @@ public class Leds extends VirtualSubsystem {
   private boolean lastEnabledAuto = false;
   private double lastEnabledTime = 0.0;
   private boolean estopped = false;
+  public boolean isIntaking = false;
+  private int initialLoopCycleCount = 0;
 
   private Leds() {
+    super("LEDs");
     leds = new AddressableLED(0);
     buffer = new AddressableLEDBuffer(length);
     leds.setLength(length);
@@ -104,7 +103,7 @@ public class Leds extends VirtualSubsystem {
     return instance;
   }
 
-  public synchronized void periodic() {
+  public synchronized void timedPeriodic() {
     // Update alliance color
     if (DriverStation.isFMSAttached()) {
       alliance = DriverStation.getAlliance();
@@ -144,39 +143,8 @@ public class Leds extends VirtualSubsystem {
     if (estopped) {
       solid(fullSection, Color.kRed);
     } else if (DriverStation.isDisabled()) {
-      /* if (lastEnabledAuto && Timer.getTimestamp() - lastEnabledTime < autoFadeMaxTime) {
-        // Auto fade
-        wave(
-            new Section(
-                0,
-                (int) (length * (1 - ((Timer.getTimestamp() - lastEnabledTime) / autoFadeTime)))),
-            Color.kGold,
-            Color.kDarkBlue,
-            waveFastCycleLength,
-            waveFastDuration);
-      } */ if (lowBatteryAlert) {
-        // Low battery
-        solid(fullSection, Color.kBlack);
-      } else if (prideLeds) {
-        // Pride stripes
-        stripes(
-            fullSection,
-            List.of(
-                Color.kBlack,
-                Color.kRed,
-                Color.kOrangeRed,
-                Color.kYellow,
-                Color.kGreen,
-                Color.kBlue,
-                Color.kPurple,
-                Color.kBlack,
-                new Color(0.15, 0.3, 1.0),
-                Color.kDeepPink,
-                Color.kWhite,
-                Color.kDeepPink,
-                new Color(0.15, 0.3, 1.0)),
-            3,
-            5.0);
+      if (canSeeAprilTag) {
+        solid(fullSection, Color.kDeepPink);
       } else {
         // Default pattern
         wave(
@@ -192,33 +160,22 @@ public class Leds extends VirtualSubsystem {
         strobe(bottomQuartSection, Color.kRed, Color.kBlack, strobeDuration);
       }
 
-    } else if (DriverStation.isAutonomous()) {
+    } else if (DriverStation.isAutonomous()) { // in auto
       if (characterizationMode) {
         strobe(fullSection, Color.kGold, Color.kBlack, 0.5);
       } else {
         solid(fullSection, Color.kAqua);
       }
-    } else {
-      solid(topSection, hexColor);
-      solid(bottomSection, secondaryHexColor);
-
-      // Auto scoring reef
-      if (autoScoringReef) {
-        solid(fullSection, Color.kAqua);
-        solid(
-            bottomQuartSection,
-            switch (autoScoringLevel) {
-              case L1 -> l1PriorityColor;
-              case L2 -> l2PriorityColor;
-              case L3 -> l3PriorityColor;
-              case L4 -> l4PriorityColor;
-            });
-      }
-
-      // Auto scoring
-      if (autoScoring) {
-        solid(fullSection, Color.kMediumAquamarine);
-      }
+    } else { // in tele
+      solid(
+          fullSection,
+          switch (autoScoringLevel) {
+            case L1 -> l1PriorityColor;
+            case L2 -> l2PriorityColor;
+            case L3 -> l3PriorityColor;
+            case L4 -> l4PriorityColor;
+            default -> Color.kBlack;
+          });
 
       // Climbing alert
       if (climbing) {
@@ -227,7 +184,11 @@ public class Leds extends VirtualSubsystem {
 
       // Coral grab alert
       if (coralGrabbed) {
-        solid(fullSection, Color.kLime);
+        strobe(fullSection, Color.kBlueViolet, Color.kBlanchedAlmond, strobeDuration);
+      }
+
+      if (isIntaking) {
+        solid(fullSection, Color.kGreen); // actually green
       }
 
       // Human player alert
@@ -241,26 +202,18 @@ public class Leds extends VirtualSubsystem {
       }
     }
 
-    // Superstructure estop alert
-    if (superstructureEstopped) {
-      solid(fullSection, Color.kRed);
-    }
-
     // Update dashboard
     SmartDashboard.putString("LEDs/First Priority", hexColor.toHexString());
     SmartDashboard.putString("LEDs/Second Priority", secondaryHexColor.toHexString());
 
     // Update LEDs
     leds.setData(buffer);
-
-    // Record cycle time
-    LoggedTracer.record("LEDs");
   }
 
   private Color solid(Section section, Color color) {
     if (color != null) {
       for (int i = section.start(); i < section.end(); i++) {
-        buffer.setLED(i, color);
+        buffer.setLED(i, new Color(color.green, color.red, color.blue));
       }
     }
     return color;
@@ -277,7 +230,7 @@ public class Leds extends VirtualSubsystem {
     double red = (c1.red * (1 - ratio)) + (c2.red * ratio);
     double green = (c1.green * (1 - ratio)) + (c2.green * ratio);
     double blue = (c1.blue * (1 - ratio)) + (c2.blue * ratio);
-    var color = new Color(red, green, blue);
+    var color = new Color(green, red, blue);
     solid(section, color);
     return color;
   }
@@ -321,7 +274,7 @@ public class Leds extends VirtualSubsystem {
       double red = (c1.red * (1 - ratio)) + (c2.red * ratio);
       double green = (c1.green * (1 - ratio)) + (c2.green * ratio);
       double blue = (c1.blue * (1 - ratio)) + (c2.blue * ratio);
-      buffer.setLED(i, new Color(red, green, blue));
+      buffer.setLED(i, new Color(green, red, blue));
     }
   }
 

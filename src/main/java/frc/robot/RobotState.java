@@ -140,7 +140,7 @@ public class RobotState {
   }
 
   public void seedToVisionObservation(VisionObservation observation) {
-    odometryPose = observation.visionPose;
+    odometryPose = observation.visionPose.toPose2d();
   }
 
   /**
@@ -187,7 +187,7 @@ public class RobotState {
       }
     }
     // difference between estimate and vision pose
-    Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose());
+    Transform2d transform = new Transform2d(estimateAtTime, observation.visionPose().toPose2d());
     // scale transform by visionK
     var kTimesTransform =
         visionK.times(
@@ -344,7 +344,7 @@ public class RobotState {
   public record OdometryObservation(
       SwerveModulePosition[] wheelPositions, Optional<Rotation2d> gyroAngle, double timestamp) {}
 
-  public record VisionObservation(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {}
+  public record VisionObservation(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {}
 
   public record TxTyObservation(
       int tagId, Transform3d cameraPose, double tx, double ty, double distance, double timestamp) {}

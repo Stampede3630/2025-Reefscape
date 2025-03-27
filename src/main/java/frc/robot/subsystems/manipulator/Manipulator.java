@@ -12,24 +12,25 @@ import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.TimedSubsystem;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-public class Manipulator extends SubsystemBase {
+public class Manipulator extends TimedSubsystem {
   private static final String KEY = "Manipulator";
   private final ManipulatorIO io;
   private final ManipulatorIOInputsAutoLogged inputs = new ManipulatorIOInputsAutoLogged();
   private final Alert motorDisconnectedAlert =
       new Alert("Manipulator motor disconnected!", Alert.AlertType.kWarning);
   private final LoggedNetworkBoolean coastOverride =
-      new LoggedNetworkBoolean(KEY + "/CoastOverride");
+      new LoggedNetworkBoolean(KEY + "/CoastOverride", false);
   @AutoLogOutput private boolean coastModeEnabled = true;
 
   public Manipulator(ManipulatorIO io) {
+    super("Manipulator");
     this.io = io;
   }
 
@@ -40,7 +41,7 @@ public class Manipulator extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
+  public void timedPeriodic() {
     io.updateInputs(inputs);
     Logger.processInputs(KEY, inputs);
     motorDisconnectedAlert.set(!inputs.connected);
@@ -70,7 +71,6 @@ public class Manipulator extends SubsystemBase {
     return new Trigger(() -> io.getManipulatorTofDistance() < 0.1).debounce(0.1);
   }
 
-  // TODO: Check distance of .1 is appropriate? seems way too low maybe 1
   public Command autoIntake() {
     Debouncer debouncer = new Debouncer(0.1);
     return runVelocity(() -> 10)
