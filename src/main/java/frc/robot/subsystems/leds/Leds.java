@@ -73,6 +73,9 @@ public class Leds extends TimedSubsystem {
   public boolean isIntaking = false;
   private int initialLoopCycleCount = 0;
 
+  public boolean isStuck = false;
+  public boolean isAtGoal = false;
+
   private Leds() {
     super("LEDs");
     leds = new AddressableLED(0);
@@ -189,6 +192,14 @@ public class Leds extends TimedSubsystem {
 
       if (isIntaking) {
         solid(fullSection, Color.kGreen); // actually green
+      }
+
+      if (isStuck) {
+        strobe(fullSection, Color.kRed, Color.kBlack, strobeDuration);
+      }
+
+      if (isAtGoal) {
+        solid(fullSection, Color.kGreen);
       }
 
       // Human player alert

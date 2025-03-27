@@ -398,13 +398,13 @@ public class RobotContainer {
               vision.seedPoseBeforeAuto(
                   AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1)))
           .andThen(auto)
-          .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.066))
+          .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.25))
           .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
     }
     return vision
         .seedPoseBeforeAuto(AllianceFlipUtil.apply(auto.getStartingPose()), Meters.of(1))
         .andThen(auto)
-        .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.066))
+        .alongWith(climber.runBangBang(climberTorqueCurrent::get, () -> -.25))
         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 

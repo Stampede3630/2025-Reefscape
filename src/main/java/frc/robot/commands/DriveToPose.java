@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.TimeDifferentiation;
@@ -53,6 +55,9 @@ public class DriveToPose extends Command {
       new LoggedTunableNumber("DriveToPose/FFMinRadius");
   private static final LoggedTunableNumber ffMaxRadius =
       new LoggedTunableNumber("DriveToPose/FFMaxRadius");
+
+    private Debouncer isStuckDebouncer = new Debouncer(0.1);
+    private Debouncer isAtGoalDebouncer = new Debouncer(0.1);
 
   static {
     drivekP.initDefault(1.2);
@@ -259,9 +264,14 @@ public class DriveToPose extends Command {
     Logger.recordOutput("DriveToPose/ThetaErrorAbsdt", thetaErrorAbsDt.getLastUnfilteredValue());
     Logger.recordOutput("DriveToPose/DriveErrorAbsdtFiltered", driveErrorAbsDt.getLastValue());
     Logger.recordOutput("DriveToPose/ThetaErrorAbsdtFiltered", thetaErrorAbsDt.getLastValue());
-    Logger.recordOutput("DriveToPose/IsStuck", stuck());
 
-    Logger.recordOutput("DriveToPose/AtGoal", atGoal());
+    boolean stuck = isStuckDebouncer.calculate(stuck());
+    boolean atGoal = isAtGoalDebouncer.calculate(atGoal());
+    Logger.recordOutput("DriveToPose/IsStuck", stuck);
+    Logger.recordOutput("DriveToPose/AtGoal", atGoal);
+
+    Leds.getInstance().isAtGoal = atGoal;
+    Leds.getInstance().isStuck = stuck;
   }
 
   @Override
@@ -271,6 +281,10 @@ public class DriveToPose extends Command {
     // Clear logs
     Logger.recordOutput("DriveToPose/Setpoint", new Pose2d[] {});
     Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {});
+    Logger.recordOutput("DriveToPose/IsStuck", false);
+    Logger.recordOutput("DriveToPose/AtGoal", false);
+    Leds.getInstance().isAtGoal = false;
+    Leds.getInstance().isStuck = false;
   }
 
   /** Checks if the robot is stopped at the final pose. */
