@@ -74,7 +74,7 @@ public class NamedCommands {
   //       .andThen(elevator.intakeHeightBlocking());
   // }
 
-  private Command getAutoScore(FieldConstants.CoralObjective objective) {
+ /* private Command getAutoScore(FieldConstants.CoralObjective objective) {
     DoubleSupplier elevHeight = () -> objective.reefLevel().height;
     return Commands.waitSeconds(0.3)
         .andThen(elevator.setPosition(elevHeight))
@@ -85,15 +85,16 @@ public class NamedCommands {
         .andThen(manipulator.outtake(() -> 10))
         .andThen(elevator.intakeHeightBlocking());
   }
-
-  // private Command getAutoScore(FieldConstants.CoralObjective objective) {
-  //   DoubleSupplier elevHeight = () -> objective.reefLevel().height;
-  //   return Commands.sequence(
-  //       AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()),
-  //       Commands.parallel(
-  //           elevator.setPositionBlocking(elevHeight, Seconds.of(10000)),
-  //           AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())),
-  //       Commands.waitSeconds(0.3),
-  //       manipulator.outtake(() -> 10),
-  //       elevator.intakeHeightBlocking());
+  */
+   private Command getAutoScore(FieldConstants.CoralObjective objective) {
+     DoubleSupplier elevHeight = () -> objective.reefLevel().height;
+     return Commands.sequence(
+         AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel()),
+         Commands.parallel(
+            elevator.setPositionBlocking(elevHeight, Seconds.of(1.5)),
+            AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())),
+         Commands.waitSeconds(0.3),
+         manipulator.outtake(() -> 10),
+         elevator.intakeHeightBlocking());
+   }
 }
