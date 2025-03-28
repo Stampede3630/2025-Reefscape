@@ -307,7 +307,7 @@ public class RobotContainer {
                 .ignoringDisable(true));
     controller
         .povLeft()
-        .whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -0.025)); // -.066
+        .whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -0.045)); // -.066
     controller
         .povRight()
         .whileTrue(
