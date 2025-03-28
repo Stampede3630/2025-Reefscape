@@ -20,6 +20,7 @@ public class Climber extends TimedSubsystem {
   public Climber(ClimberIO io) {
     super("Climber");
     this.io = io;
+    this.setDefaultCommand(stop());
   }
 
   @Override
