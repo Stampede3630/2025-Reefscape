@@ -94,7 +94,7 @@ public class RobotContainer {
   private final LoggedNetworkNumber l3Offset =
       new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L3", 0);
   private final LoggedNetworkNumber l4Offset =
-      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L4", 0);
+      new LoggedNetworkNumber("SmartDashboard/ElevatorOffsets/L4", 0.5);
   private final LoggedNetworkBoolean takeSnapshot =
       new LoggedNetworkBoolean("SmartDashboard/Take Snapshot before Auto", false);
   @AutoLogOutput private int autoScoreBranch = 0;
