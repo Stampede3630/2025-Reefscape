@@ -146,7 +146,7 @@ public class ClimberIOTalonFX implements ClimberIO {
 
   @Override
   public void stop() {
-    //motor.stopMotor()
+    // motor.stopMotor()
     motor.setControl(voltageRequest.withOutput(0));
   }
 
