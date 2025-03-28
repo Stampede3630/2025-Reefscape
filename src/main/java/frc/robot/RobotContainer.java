@@ -305,9 +305,8 @@ public class RobotContainer {
                                 robotState.getEstimatedPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> 0.0));//-.066
-    controller
-        .povRight()
+    controller.povLeft().whileTrue(climber.runBangBang(climberTorqueCurrent::get, () -> -0.025));//-.066
+    controller.povRight()
         .whileTrue(
             elevator
                 .setPosition(() -> FieldConstants.ReefLevel.L1.height)
