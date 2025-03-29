@@ -90,7 +90,7 @@ public class NamedCommands {
     DoubleSupplier elevHeight = () -> objective.reefLevel().height;
     return Commands.sequence(
         AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())
-            .withTimeout(Seconds.of(5)),
+            .withTimeout(Seconds.of(3.5)),
         elevator.setPositionBlocking(elevHeight, Seconds.of(1.5)),
         // AutoScore.getAutoDriveBlocking(drive, () -> objective, () -> objective.reefLevel())),
         Commands.waitSeconds(0.3),
